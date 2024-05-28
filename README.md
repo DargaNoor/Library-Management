@@ -1,3 +1,48 @@
+
+public class Encryptor {
+    public static void main(String[] args) {
+        String plainText = "Hello World";
+        int key = 7; // Key for XOR encryption
+        
+        String encryptedText = encryptXOR(plainText, key);
+        System.out.println("Encrypted Text: " + encryptedText);
+    }
+
+    public static String encryptXOR(String input, int key) {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < input.length(); i++) {
+            result.append((char)(input.charAt(i) ^ key));
+        }
+        return result.toString();
+    }
+}
+
+public class Decryptor {
+    public static void main(String[] args) {
+        String encryptedText = ""; // Replace with encrypted text from above
+        int key = 7; // Key for decryption
+        
+        String decryptedText = decryptXOR(encryptedText, key);
+        System.out.println("Decrypted Text: " + decryptedText);
+    }
+
+    public static String decryptXOR(String input, int key) {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < input.length(); i++) {
+            result.append((char)(input.charAt(i) ^ key));
+        }
+        return result.toString();
+    }
+}
+
+
+
+
+
+
+
+
+
 public class Decryptor {
     public static void main(String[] args) {
         String encryptedText = "Jgnnq Yqtnf";
