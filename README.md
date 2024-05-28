@@ -1,3 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0"
+                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                xmlns:js="http://www.mozilla.org/rhino"
+                extension-element-prefixes="js">
+    <xsl:template match="/">
+        <html>
+        <head>
+            <title>RSA-OAEP Encryption with JavaScript</title>
+            <script type="text/javascript">
+                <![CDATA[
+                async function encryptMessage(publicKeyPem, message) {
+                    const encoder = new TextEncoder();
+                    const encodedMessage = encoder.encode(message);
+                    
+                    const publicKey = await window.crypto.subtle.importKey(
+                        "spki",
+                        base64ToArrayBuffer(publicKeyPem),
+                        {
+                            name: "RSA-OAEP",
+                            hash: "SHA-256"
+                        },
+                        true,
+                        ["encrypt"]
+                    );
+
+                    const encryptedMessage = await window.crypto.subtle.encrypt(
+                        {
+                            name: "RSA-OAEP"
+                        },
+                        publicKey,
+                        encodedMessage
+                    );
+
+                    return arrayBufferToBase64(encryptedMessage);
+                }
+
+                function base64ToArrayBuffer(base64) {
+                    const binaryString = window.atob(base64);
+                    const len = binaryString.length;
+                    const bytes = new Uint8Array(len);
+                    for (let i = 0; i < len; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
+                    return bytes.buffer;
+                }
+
+                function arrayBufferToBase64(buffer) {
+                    let binary = '';
+                    const bytes = new Uint8Array(buffer);
+                    const len = bytes.byteLength;
+                    for (let i = 0; i < len; i++) {
+                        binary += String.fromCharCode(bytes[i]);
+                    }
+                    return window.btoa(binary);
+                }
+
+                async function performEncryption() {
+                    const publicKeyPem = document.getElementById("publicKey").value;
+                    const message = document.getElementById("message").value;
+                    const encryptedMessage = await encryptMessage(publicKeyPem, message);
+                    document.getElementById("encryptedMessage").innerText = encryptedMessage;
+                }
+                ]]>
+            </script>
+        </head>
+        <body>
+            <h2>RSA-OAEP Encryption</h2>
+            <label for="publicKey">Public Key (Base64 PEM format):</label><br>
+            <textarea id="publicKey" rows="10" cols="50"></textarea><br><br>
+            <label for="message">Message:</label><br>
+            <textarea id="message" rows="4" cols="50"></textarea><br><br>
+            <button onclick="performEncryption()">Encrypt</button><br><br>
+            <h3>Encrypted Message:</h3>
+            <p id="encryptedMessage"></p>
+        </body>
+        </html>
+    </xsl:template>
+</xsl:stylesheet>
+
+
 # Library-Management
 Library Management System is a system which maintains the information about the books present in the library, their authors, the members of library to whom books are 
 issued and all. This is very difficult to organize manually. Maintenance of all this information manually is a very complex task. Owing to the advancement of technology, 
