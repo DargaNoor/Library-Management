@@ -1,3 +1,31 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0"
+                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                xmlns:dp="http://www.datapower.com/extensions"
+                extension-element-prefixes="dp">
+    <!-- The public key and message would typically be passed in as parameters -->
+    <xsl:param name="publicKey">MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAq6N78zZ0xlD0kJzyqWQC...</xsl:param>
+    <xsl:param name="message">This is a secret message</xsl:param>
+
+    <xsl:template match="/">
+        <output>
+            <xsl:variable name="messageBase64">
+                <xsl:value-of select="dp:base64-encode($message)"/>
+            </xsl:variable>
+            <xsl:variable name="encryptedMessage">
+                <xsl:value-of select="dp:encrypt-key('RSA-OAEP', $publicKey, $messageBase64, 'PEM')"/>
+            </xsl:variable>
+            <encryptedMessage>
+                <xsl:value-of select="$encryptedMessage"/>
+            </encryptedMessage>
+        </output>
+    </xsl:template>
+</xsl:stylesheet>
+
+
+
+
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.0"
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
