@@ -1,4 +1,40 @@
 
+public class KeyFinder {
+    public static void main(String[] args) {
+        String encryptedText = "ÓÒ ĐEO | (QhOV×D?";
+        
+        for (int key = 0; key < 256; key++) {
+            String decryptedText = decryptXOR(encryptedText, key);
+            if (isPrintable(decryptedText)) {
+                System.out.println("Key: " + key + ", Decrypted Text: " + decryptedText);
+            }
+        }
+    }
+
+    public static String decryptXOR(String input, int key) {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < input.length(); i++) {
+            result.append((char)(input.charAt(i) ^ key));
+        }
+        return result.toString();
+    }
+
+    public static boolean isPrintable(String text) {
+        for (char c : text.toCharArray()) {
+            if (c < 32 || c > 126) {
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
+
+
+
+
+
+
 public class Encryptor {
     public static void main(String[] args) {
         String plainText = "Hello World";
