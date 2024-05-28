@@ -1,5 +1,32 @@
 public class Decryptor {
     public static void main(String[] args) {
+        String encryptedText = "Jgnnq Yqtnf";
+        int shift = 2; // Shift key for Caesar Cipher decryption
+        
+        String decryptedText = decryptCaesarCipher(encryptedText, shift);
+        System.out.println("Decrypted Text: " + decryptedText);
+    }
+
+    public static String decryptCaesarCipher(String input, int shift) {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            if (Character.isLetter(c)) {
+                char shiftBase = Character.isUpperCase(c) ? 'A' : 'a';
+                c = (char) (shiftBase + (c - shiftBase - shift + 26) % 26);
+            }
+            result.append(c);
+        }
+        return result.toString();
+    }
+}
+
+
+
+
+
+public class Decryptor {
+    public static void main(String[] args) {
         String encryptedText = "Jgnnq\"Yqtnf";
         int key = 2; // Key for decryption
         
