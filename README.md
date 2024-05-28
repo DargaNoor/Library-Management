@@ -1,3 +1,24 @@
+public class Decryptor {
+    public static void main(String[] args) {
+        String encryptedText = "Jgnnq\"Yqtnf";
+        int key = 2; // Key for decryption
+        
+        String decryptedText = decryptXOR(encryptedText, key);
+        System.out.println("Decrypted Text: " + decryptedText);
+    }
+
+    public static String decryptXOR(String input, int key) {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < input.length(); i++) {
+            result.append((char)(input.charAt(i) ^ key));
+        }
+        return result.toString();
+    }
+}
+
+
+
+
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:dp="http://www.datapower.com/extensions"
