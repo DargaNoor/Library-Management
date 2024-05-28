@@ -1,4 +1,36 @@
 <xsl:stylesheet version="1.0"
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    xmlns:dp="http://www.datapower.com/extensions"
+    extension-element-prefixes="dp">
+
+    <xsl:variable name="AESKey">
+        <xsl:value-of select="dp:generate-key('http://www.w3.org/2001/04/xmlenc#aes128-cbc')"/>
+    </xsl:variable>
+
+    <xsl:template match="/">
+        <!-- Your template logic here -->
+        <xsl:variable name="UsernameToken">YourUsernameHere</xsl:variable>
+
+        <xsl:variable name="AESKeyBase64">
+            <xsl:value-of select="dp:encode($AESKey, 'base-64')"/>
+        </xsl:variable>
+
+        <xsl:variable name="EncryptedToken">
+            <xsl:value-of select="dp:encrypt($UsernameToken, $AESKeyBase64, 'http://www.w3.org/2001/04/xmlenc#aes128-cbc')"/>
+        </xsl:variable>
+
+        <!-- Store the encrypted token in a variable -->
+        <dp:set-variable name="'var://context/api/EncryptedUsernameToken'" value="normalize-space($EncryptedToken)"/>
+    </xsl:template>
+</xsl:stylesheet>
+
+
+
+
+
+
+
+<xsl:stylesheet version="1.0"
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 xmlns:dp="http://www.datapower.com/extensions"
                 extension-element-prefixes="dp"
