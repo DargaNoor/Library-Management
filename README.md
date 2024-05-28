@@ -1,3 +1,66 @@
+<xsl:stylesheet version="1.0"
+                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                xmlns:dp="http://www.datapower.com/extensions"
+                extension-element-prefixes="dp"
+                xmlns:xenc="http://www.w3.org/2001/04/xmlenc#"
+                xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+                xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"
+                xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+    
+    <xsl:template match="/">
+        <!-- Define the key for AES-128-CBC encryption -->
+        <xsl:variable name="encryptionKey" select="'YOUR_BASE64_ENCODED_AES_KEY'" />
+        
+        <!-- Sample XML content to encrypt -->
+        <xsl:variable name="xmlContent">
+            <![CDATA[
+            <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" 
+                               xmlns:ds="http://www.w3.org/2000/09/xmldsig#" 
+                               xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" 
+                               xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+                <SOAP-ENV:Header>
+                    <wsse:Security mustUnderstand="1">
+                        <wsse:UsernameToken>
+                            <wsse:Username>B000200206</wsse:Username>
+                        </wsse:UsernameToken>
+                        <wsu:Timestamp>
+                            <wsu:Created>30</wsu:Created>
+                            <wsu:Expires>30</wsu:Expires>
+                        </wsu:Timestamp>
+                        <ds:Signature>
+                            <ds:SignedInfo>
+                                <ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/>
+                                <ds:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/>
+                            </ds:SignedInfo>
+                        </ds:Signature>
+                    </wsse:Security>
+                </SOAP-ENV:Header>
+                <SOAP-ENV:Body/>
+            </SOAP-ENV:Envelope>
+            ]]>
+        </xsl:variable>
+
+        <!-- Encrypt the XML content using AES-128-CBC -->
+        <xsl:variable name="encryptedXml">
+            <xsl:value-of select="dp:encrypt-data($xmlContent, $encryptionKey, 'http://www.w3.org/2001/04/xmlenc#aes128-cbc')" />
+        </xsl:variable>
+
+        <!-- Output the encrypted content -->
+        <xsl:output method="xml" indent="yes"/>
+        <EncryptedData xmlns="http://www.w3.org/2001/04/xmlenc#">
+            <CipherData>
+                <CipherValue>
+                    <xsl:value-of select="$encryptedXml" />
+                </CipherValue>
+            </CipherData>
+        </EncryptedData>
+    </xsl:template>
+</xsl:stylesheet>
+
+
+
+
+
 ï6,ÌþÕ9¾'’«
 public class KeyFinder {
     public static void main(String[] args) {
