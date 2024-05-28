@@ -1,3 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                xmlns:dp="http://www.datapower.com/extensions"
+                extension-element-prefixes="dp"
+                version="1.0">
+  <xsl:output method="xml" encoding="UTF-8" indent="yes"/>
+  
+  <!-- Replace these with your actual key and IV values -->
+  <xsl:variable name="aes-key" select="'your-base64-encoded-key-here'"/>
+  <xsl:variable name="aes-iv" select="'your-base64-encoded-iv-here'"/>
+  
+  <xsl:template match="/">
+    <xsl:variable name="plaintext" select="'B00020020612345678123'"/>
+    <xsl:variable name="hashed-data">
+      <dp:sha1>
+        <xsl:value-of select="$plaintext"/>
+      </dp:sha1>
+    </xsl:variable>
+    
+    <xsl:variable name="padded-data" select="concat($hashed-data, '0000000000000000000000000000000000000000')"/>
+    
+    <xsl:variable name="encrypted-data">
+      <dp:encrypt type="aes-cbc" key="$aes-key" iv="$aes-iv" form="base64">
+        <xsl:value-of select="$padded-data"/>
+      </dp:encrypt>
+    </xsl:variable>
+    
+    <xsl:variable name="cipher-value" select="dp:base64-encode(dp:binary-from-hex($encrypted-data))"/>
+    
+    <output>
+      <cipher-value>
+        <xsl:value-of select="$cipher-value"/>
+      </cipher-value>
+      <length>
+        <xsl:value-of select="string-length($cipher-value)"/>
+      </length>
+    </output>
+  </xsl:template>
+</xsl:stylesheet>
+
+
 
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.0"
