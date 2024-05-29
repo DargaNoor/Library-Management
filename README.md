@@ -1,3 +1,29 @@
+import com.eviware.soapui.impl.wsdl.submit.transports.http.HttpRequestTransport
+import com.eviware.soapui.impl.wsdl.WsdlOperation
+import com.eviware.soapui.impl.wsdl.submit.transports.http.HttpResponse
+
+def operation = mockRequest.operation as WsdlOperation
+def request = operation.createRequest( false )
+request.requestContent = mockRequest.requestContent
+
+def transport = new HttpRequestTransport()
+def endpoint = "http://actual-endpoint.com/service" // Replace with your actual endpoint URL
+def response = transport.sendRequest( request, endpoint )
+
+return response.responseContent
+
+
+
+
+
+
+
+
+
+com.eviware.soapui.impl.wsdl.submit.transports.http.HttpRequestTransport
+
+
+
 
 import java.security.KeyFactory;
 import java.security.PrivateKey;
