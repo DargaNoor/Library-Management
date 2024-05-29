@@ -1,3 +1,56 @@
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    xmlns:xenc="http://www.w3.org/2001/04/xmlenc#"
+    xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+    xmlns:wsse="http://schemas.xmlsoap.org/ws/2003/06/secext"
+    xmlns:wsse11="http://schemas.xmlsoap.org/ws/2005/02/sc" 
+    exclude-result-prefixes="xenc ds wsse wsse11">
+
+    <!-- Define variables for encryption URLs -->
+    <xsl:variable name="encryptionURL">http://www.w3.org/2001/04/xmlenc#aes128-cbc</xsl:variable>
+    <xsl:variable name="responseURL">http://www.w3.org/2001/04/xmlenc#aes128-cbc/response</xsl:variable>
+
+    <!-- Main template -->
+    <xsl:template match="/">
+        <!-- Call encryption function and pass UsernameToken -->
+        <xsl:call-template name="encrypt">
+            <xsl:with-param name="usernameToken">
+                <!-- UsernameToken data -->
+                <wsse:UsernameToken>
+                    <xsl:text>...</xsl:text> <!-- Insert your UsernameToken data here -->
+                </wsse:UsernameToken>
+            </xsl:with-param>
+        </xsl:call-template>
+    </xsl:template>
+
+    <!-- Template for encryption logic -->
+    <xsl:template name="encrypt">
+        <xsl:param name="usernameToken"/>
+
+        <!-- Generate encrypted data for UsernameToken -->
+        <xsl:variable name="encryptedData">
+            <xenc:EncryptedData xmlns:xenc="http://www.w3.org/2001/04/xmlenc#" Type="http://www.w3.org/2001/04/xmlenc#Content">
+                <xenc:EncryptionMethod Algorithm="{$encryptionURL}"/>
+                <ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+                    <wsse:SecurityTokenReference wsse11:TokenType="http://schemas.xmlsoap.org/ws/2005/02/sc#EncryptedKey" xmlns:wsse11="http://schemas.xmlsoap.org/ws/2005/02/sc#">
+                        <wsse:Reference URI="#EK-59B3E93E2667873DE21716843436626118"/>
+                    </wsse:SecurityTokenReference>
+                </ds:KeyInfo>
+                <xenc:CipherData>
+                    <!-- Insert cipher value here -->
+                    <xenc:CipherValue>InsertCipherValueHere</xenc:CipherValue>
+                </xenc:CipherData>
+            </xenc:EncryptedData>
+        </xsl:variable>
+
+        <!-- Output the encrypted data -->
+        <xsl:value-of select="$encryptedData"/>
+    </xsl:template>
+
+</xsl:stylesheet>
+
+
+
+
 const crypto = require('crypto');
 
 // Generate a random AES-128-CBC key
