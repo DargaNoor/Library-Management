@@ -1,3 +1,53 @@
+const crypto = require('crypto');
+
+// Generate a random AES-128-CBC key
+const generateKey = () => {
+  return crypto.randomBytes(16); // 16 bytes for AES-128
+};
+
+// Encode the AES key in base64
+const encodeBase64 = (data) => {
+  return data.toString('base64');
+};
+
+// Encrypt data using AES-128-CBC
+const encryptData = (key, data) => {
+  const iv = crypto.randomBytes(16); // Initialization vector for CBC mode
+  const cipher = crypto.createCipheriv('aes-128-cbc', key, iv);
+  let encrypted = cipher.update(data, 'utf8', 'base64');
+  encrypted += cipher.final('base64');
+  return encodeBase64(iv) + ':' + encrypted; // Include IV for decryption
+};
+
+// Example username and password combination
+const username = 'yourUsername';
+const password = 'yourPassword';
+const usernameToken = `${username}${password}`;
+
+const main = () => {
+  // Generate AES key
+  const aesKey = generateKey();
+  const aesKeyBase64 = encodeBase64(aesKey);
+
+  // Encrypt the username token
+  const encryptedToken = encryptData(aesKey, usernameToken);
+
+  // Log the results
+  console.log('AES Key (Base64):', aesKeyBase64);
+  console.log('Encrypted Token:', encryptedToken);
+  console.log('Encrypted Token Length:', encryptedToken.length);
+
+  // Store the encrypted token in a context variable or further use it as needed
+  // This would depend on your specific use case
+};
+
+main();
+
+
+
+
+
+
 <xsl:stylesheet version="1.0"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:dp="http://www.datapower.com/extensions"
