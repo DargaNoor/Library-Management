@@ -1,3 +1,68 @@
+
+import java.security.KeyFactory;
+import java.security.PrivateKey;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.Base64;
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+import javax.crypto.spec.IvParameterSpec;
+
+public class CertificateDecryption {
+
+    public static PrivateKey getPrivateKey(String base64PrivateKey) throws Exception {
+        byte[] keyBytes = Base64.getDecoder().decode(base64PrivateKey);
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        return keyFactory.generatePrivate(keySpec);
+    }
+
+    public static byte[] decryptAESKey(byte[] encryptedAESKey, PrivateKey privateKey) throws Exception {
+        Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding");
+        cipher.init(Cipher.DECRYPT_MODE, privateKey);
+        return cipher.doFinal(encryptedAESKey);
+    }
+
+    public static String decryptData(String encryptedData, byte[] aesKey, String iv) throws Exception {
+        byte[] encryptedBytes = Base64.getDecoder().decode(encryptedData);
+        SecretKeySpec secretKey = new SecretKeySpec(aesKey, "AES");
+        IvParameterSpec ivSpec = new IvParameterSpec(iv.getBytes());
+
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        cipher.init(Cipher.DECRYPT_MODE, secretKey, ivSpec);
+
+        byte[] originalBytes = cipher.doFinal(encryptedBytes);
+        return new String(originalBytes);
+    }
+
+    public static void main(String[] args) {
+        try {
+            // Load private key (replace with your actual base64-encoded private key string)
+            String base64PrivateKey = "your_base64_encoded_private_key_here";
+            PrivateKey privateKey = getPrivateKey(base64PrivateKey);
+
+            // Encrypted AES key (replace with your actual base64-encoded encrypted AES key)
+            byte[] encryptedAESKey = Base64.getDecoder().decode("your_base64_encoded_encrypted_aes_key_here");
+
+            // Decrypt AES key
+            byte[] aesKey = decryptAESKey(encryptedAESKey, privateKey);
+
+            // Example data to decrypt
+            String encryptedData = "your_base64_encoded_ciphertext_here";
+            String iv = "your16byteivhere"; // Ensure this is 16 bytes
+
+            // Decrypt data with AES key
+            String decryptedData = decryptData(encryptedData, aesKey, iv);
+            System.out.println("Decrypted Data: " + decryptedData);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:xenc="http://www.w3.org/2001/04/xmlenc#"
     xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
