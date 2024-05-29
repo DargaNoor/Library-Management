@@ -1,3 +1,27 @@
+
+import com.eviware.soapui.support.XmlHolder
+
+// Extract the SOAP request content from the incoming mock request
+def requestContent = mockRequest.requestContent
+
+// Create an HTTP request and set the required parameters
+def httpRequest = new com.eviware.soapui.impl.wsdl.submit.transports.http.HttpRequest()
+httpRequest.method = "POST"
+httpRequest.endpoint = "http://actual-endpoint.com/service" // Replace with your actual endpoint URL
+httpRequest.requestContent = requestContent
+httpRequest.requestHeaders["Content-Type"] = "text/xml"
+
+// Create an HTTP transport object to send the request
+def httpTransport = new com.eviware.soapui.impl.wsdl.submit.transports.http.HttpClientRequestTransport()
+def httpResponse = httpTransport.sendRequest(httpRequest)
+
+// Return the HTTP response content as the MockService response
+return httpResponse.responseContent
+
+
+
+
+
 import com.eviware.soapui.impl.wsdl.submit.transports.http.HttpRequestTransport
 import com.eviware.soapui.impl.wsdl.WsdlOperation
 import com.eviware.soapui.impl.wsdl.submit.transports.http.HttpResponse
