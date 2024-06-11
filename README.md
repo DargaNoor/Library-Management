@@ -1,3 +1,19 @@
+<wsse:UsernameToken wsu:Id="UsernameToken-F2AE1262259606AA8F171698646586339">
+    <wsse:Username>john_doe</wsse:Username>
+    <wsse:Password Type="http://docs.oasis-open.org/wss/oasis-wss-username-token-profile-1.1#PasswordText">password</wsse:Password>
+    <wsse:Nonce EncodingType="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary">nonce-value</wsse:Nonce>
+    <wsu:Created>2024-06-11T12:34:56Z</wsu:Created>
+</wsse:UsernameToken>
+
+<xenc:EncryptedData Id="ED-F2AE1262259606AA8F171698646588147" Type="http://www.w3.org/2001/04/xmlenc#Content" xmlns:xenc="http://www.w3.org/2001/04/xmlenc#">
+    <xenc:EncryptionMethod Algorithm="http://www.w3.org/2001/04/xmlenc#aes128-cbc"/>
+    <ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+        <wsse:SecurityTokenReference wsse11:TokenType="http://docs.oasis-open.org/wss/oasis-wss-soap-message-security-1.1#EncryptedKey" xmlns:wsse11="http://docs.oasis-open.org/wss/oasis-wss-wssecurity-secext-1.1.xsd">
+            <wsse:Reference URI="#EK-F2AE1262259606AA8F171698646587045"/>
+        </wsse:SecurityTokenReference>
+    </ds:KeyInfo>
+    <xenc:CipherData>ABCD1234</xenc:CipherData>
+</xenc:EncryptedData>
 
 # Library-Management
 Library Management System is a system which maintains the information about the books present in the library, their authors, the members of library to whom books are 
