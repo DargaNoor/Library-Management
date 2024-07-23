@@ -1,3 +1,32 @@
+CREATE COMPUTE MODULE SetMQHeadersForConsumer
+    CREATE FUNCTION Main() RETURNS BOOLEAN
+    BEGIN
+        -- Assuming you have received a message and want to modify its headers
+        
+        -- Example: Set the Message ID
+        SET OutputRoot.MQMD.MsgId = CAST('1234567890ABCDEF' AS BLOB);
+        
+        -- Example: Set the Correlation ID
+        SET OutputRoot.MQMD.CorrelId = CAST('0987654321FEDCBA' AS BLOB);
+        
+        -- Example: Set Reply-to Queue Manager
+        SET OutputRoot.MQMD.ReplyToQMgr = 'REPLY_QMGR';
+        
+        -- Example: Set Reply-to Queue
+        SET OutputRoot.MQMD.ReplyToQ = 'REPLY_QUEUE';
+        
+        -- Copy the incoming message to the output message if needed
+        SET OutputRoot.BLOB.BLOB = InputRoot.BLOB.BLOB;
+        
+        -- Set the Output Message Domain (if required)
+        SET OutputRoot.Properties.MessageDomain = 'MQMD';
+        
+        RETURN TRUE;
+    END;
+END MODULE;
+
+
+
 CREATE COMPUTE MODULE PrepareRequestMessage
     CREATE FUNCTION Main() RETURNS BOOLEAN
     BEGIN
