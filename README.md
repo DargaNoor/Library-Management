@@ -38,34 +38,6 @@ CREATE COMPUTE MODULE PrepareRequestMessage
             CREATE NEXTSIBLING OF OutputRoot.Properties DOMAIN('MQMD') NAME 'MQMD';
         END IF;
 
-        -- Set the MQMD fields
-        SET OutputRoot.MQMD.Format = 'MQSTR';
-        SET OutputRoot.MQMD.Version = 2; -- Use version 2 for compatibility
-        SET OutputRoot.MQMD.ReplyToQ = 'A.REPLY.QUEUE'; -- Specify the reply queue
-        SET OutputRoot.MQMD.ReplyToQMgr = 'A'; -- Specify the reply queue manager
-        SET OutputRoot.MQMD.MsgType = MQMT_REQUEST;
-        SET OutputRoot.MQMD.Persistence = MQPER_PERSISTENT;
-        SET OutputRoot.MQMD.Encoding = 546; -- Encoding for packed decimal
-        SET OutputRoot.MQMD.CodedCharSetId = 1208; -- UTF-8 encoding
-
-        -- Optionally set CorrelId if required
-        -- SET OutputRoot.MQMD.CorrelId = CAST(UUID AS BLOB CCSID 1208);
-
-        -- Ensure the Properties section is correctly set
-        SET OutputRoot.Properties.MessageDomain = 'XMLNSC'; -- or JSON, BLOB, etc.
-        SET OutputRoot.Properties.MessageSet = '';
-        SET OutputRoot.Properties.MessageType = '';
-        SET OutputRoot.Properties.MessageFormat = '';
-
-        -- Prepare the message content
-        -- Example: If the message content is in XML format
-        DELETE FIELD OutputRoot.XMLNSC.Data;
-        SET OutputRoot.XMLNSC.Data = InputRoot.XMLNSC.Data;
-
-        RETURN TRUE;
-    END;
-END MODULE;
-
 # Library-Management
 Library Management System is a system which maintains the information about the books present in the library, their authors, the members of library to whom books are 
 issued and all. This is very difficult to organize manually. Maintenance of all this information manually is a very complex task. Owing to the advancement of technology, 
