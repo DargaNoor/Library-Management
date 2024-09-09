@@ -9,3 +9,4 @@ control is provided in all the forms to navigate through the large amount of rec
 The Library Management has been designed to computerize and automate the operations performed over the information about the members, book issues and returns and all 
 other operations. This computerization of library helps in many instances of its maintenance. It reduces the workload of management as most of the manual work done is 
 reduced.
+https://teams.microsoft.com/l/meetup-join/19:meeting_ZWVjNjNhZDQtMmQyOS00NDIwLTgzOTctNjY2Y2IwYTUyZTYy@thread.v2/0?context=%7B%22Tid%22:%22fbdb2235-7f50-4509-b407-c58325ec27a8%22,%22Oid%22:%226be9f736-ddc7-4814-acc9-defdc106c7b3%22%7D
