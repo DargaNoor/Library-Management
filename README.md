@@ -1,3 +1,34 @@
+<?xml version="1.0"?>
+<xsl:stylesheet version="1.0" 
+                xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                xmlns:dp="http://www.datapower.com/extensions"
+                extension-element-prefixes="dp">
+
+    <xsl:template match="/">
+        <!-- Check the status of AAA Authentication -->
+        <xsl:choose>
+            <xsl:when test="$var://context/AAA/Status = 'failure'">
+                <!-- Set HTTP response code to 401 -->
+                <dp:set-response-header name="'HTTP/1.1'" value="'401 Unauthorized'"/>
+                
+                <!-- Set custom response message -->
+                <dp:reject>
+                    <dp:response>
+                        <xsl:text>Invalid username or password.</xsl:text>
+                    </dp:response>
+                </dp:reject>
+            </xsl:when>
+            
+            <xsl:otherwise>
+                <!-- Normal processing if AAA is successful -->
+                <xsl:text>Authentication successful, continue processing...</xsl:text>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+    
+</xsl:stylesheet>
+
+
 public string Decrypt(string base64EncryptedText)
 {
     base64EncryptedText = base64EncryptedText.Trim('"');
