@@ -1,4 +1,76 @@
 import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.security.SecureRandom;
+import java.util.Base64;
+
+public class EncryptionExample {
+
+    // Method to encrypt a plain text
+    public static String encrypt(String plainText) throws Exception {
+        // Base64 encoded key (32 bytes for AES-256)
+        String base64Key = "abcdefghijklmnopqrstuvwxyz123456";  // Replace with your key
+        byte[] keyBytes = Base64.getDecoder().decode(base64Key);
+
+        // Generate random IV (16 bytes for AES/CBC)
+        byte[] iv = new byte[16];
+        SecureRandom secureRandom = new SecureRandom();
+        secureRandom.nextBytes(iv);
+
+        // Perform encryption
+        byte[] encryptedBytes = encryptWithAesCbcPkcs5(plainText, keyBytes, iv);
+
+        // Concatenate IV + Encrypted data
+        byte[] encryptedWithIv = new byte[iv.length + encryptedBytes.length];
+        System.arraycopy(iv, 0, encryptedWithIv, 0, iv.length);
+        System.arraycopy(encryptedBytes, 0, encryptedWithIv, iv.length, encryptedBytes.length);
+
+        // Return Base64 encoded result (IV + Encrypted data)
+        return Base64.getEncoder().encodeToString(encryptedWithIv);
+    }
+
+    // Encrypt method using AES/CBC/PKCS5Padding
+    private static byte[] encryptWithAesCbcPkcs5(String plainText, byte[] key, byte[] iv) throws Exception {
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+
+        SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
+        IvParameterSpec ivParams = new IvParameterSpec(iv);
+
+        cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivParams);
+
+        return cipher.doFinal(plainText.getBytes("UTF-8"));
+    }
+
+    public static void main(String[] args) {
+        try {
+            // Example text to encrypt
+            String plainText = "This is a secret message.";
+
+            // Perform encryption
+            String encryptedData = encrypt(plainText);
+            System.out.println("Encrypted Data (Base64): " + encryptedData);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Base64;
