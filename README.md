@@ -1,3 +1,86 @@
+import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.util.Base64;
+import java.io.ByteArrayOutputStream;
+import java.io.ByteArrayInputStream;
+import java.io.InputStreamReader;
+import java.io.BufferedReader;
+
+public class DecryptionExample {
+
+    // Decrypt base64-encoded string
+    public static String decrypt(String base64EncryptedText) throws Exception {
+        // Trim the input and remove any unexpected characters
+        base64EncryptedText = base64EncryptedText.trim().replace("\r", "").replace("\n", "").replace(" ", "");
+
+        // Validate the input characters
+        for (char c : base64EncryptedText.toCharArray()) {
+            if (!Character.isLetterOrDigit(c)) {
+                throw new IllegalArgumentException("Unexpected character: " + c + " (Unicode: " + (int) c + ")");
+            }
+        }
+
+        // Decode the base64 string into a byte array
+        byte[] encryptedBytes = Base64.getDecoder().decode(base64EncryptedText);
+
+        // Call method to decrypt the byte array (cipherTextWithIv)
+        return decryptFromBase64(encryptedBytes);
+    }
+
+    // Decrypt from byte array which contains IV + cipher text
+    public static String decryptFromBase64(byte[] cipherTextWithIv) {
+        try {
+            // Define AES encryption parameters
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            byte[] key = Base64.getDecoder().decode("abcdefghijklmnopqrstuvwxyz123456");  // Base64-encoded key (32 bytes for AES-256)
+
+            if (cipherTextWithIv.length < cipher.getBlockSize()) {
+                throw new IllegalArgumentException("The cipherTextWithIv array is too short to contain the IV.");
+            }
+
+            // Extract the IV (first 16 bytes)
+            byte[] iv = new byte[cipher.getBlockSize()];
+            System.arraycopy(cipherTextWithIv, 0, iv, 0, iv.length);
+
+            // Extract the cipher text (remaining bytes)
+            byte[] cipherText = new byte[cipherTextWithIv.length - iv.length];
+            System.arraycopy(cipherTextWithIv, iv.length, cipherText, 0, cipherText.length);
+
+            // Initialize decryption
+            SecretKeySpec secretKey = new SecretKeySpec(key, "AES");
+            IvParameterSpec ivParams = new IvParameterSpec(iv);
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, ivParams);
+
+            // Decrypt the cipher text
+            byte[] decryptedBytes = cipher.doFinal(cipherText);
+
+            // Return decrypted text as string
+            return new String(decryptedBytes, "UTF-8");
+
+        } catch (Exception ex) {
+            return ex.toString();  // In case of exception, return error message
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+        // Example of an encrypted text (IV + Cipher Text, base64 encoded)
+        String base64EncryptedText = "Base64_Encrypted_Data";
+
+        // Perform decryption
+        String decryptedText = decrypt(base64EncryptedText);
+        System.out.println("Decrypted Data: " + decryptedText);
+    }
+}
+
+
+
+
+
+
+
+
+
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
