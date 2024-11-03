@@ -1,4 +1,48 @@
-import javax.crypto.Cipher;
+
+
+
+
+
+
+import javax.crimport json
+import re
+
+# Function to convert snake_case or space separated words to CamelCase
+def to_camel_case(field):
+    parts = re.split(r'[_ ]+', field)
+    return parts[0].capitalize() + ''.join(part.capitalize() for part in parts[1:])
+
+# Function to process each line and generate the output dictionary
+def process_request(request_data):
+    output = {}
+    for key in request_data:
+        # Convert the field name to camel case for the output dictionary's key
+        camel_key = to_camel_case(key)
+        # Map the camel case key to its original field name
+        output[camel_key] = key
+    return output
+
+# Function to process the input file and generate the output for each request
+def process_requests_from_file(input_file):
+    with open(input_file, 'r') as file:
+        for line in file:
+            line = line.strip()
+            if line:
+                try:
+                    # Parse each line as JSON
+                    request_data = json.loads(line)
+                    # Process the request and generate the output
+                    output = process_request(request_data)
+                    print(json.dumps(output, indent=4))
+                except json.JSONDecodeError:
+                    print("Invalid JSON format in line:", line)
+
+# Input file path
+input_file = 'requests.txt'
+
+# Process the requests from file
+process_requests_from_file(input_file)
+ypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
