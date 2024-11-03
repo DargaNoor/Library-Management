@@ -1,3 +1,59 @@
+import json
+from datetime import datetime
+
+# Function to format SQL insert statements
+def generate_insert_statement(api_code, field_name, field_value, action, service_name):
+    return (f"INSERT INTO EISAPP.IHUB_CACHE_DETAILS "
+            f"(API_CODE, FIELD_NAME, FIELD_VALUE, CREATION_TIME, ACTION, SERVICE_NAME) "
+            f"VALUES ('{api_code}', '{field_name}', '{json.dumps(field_value)}', TRUNC(SYSDATE), '{action}', '{service_name}');\n")
+
+# Function to process JSON files and generate SQL statements
+def create_sql_insert_statements(request_file, response_file, output_file):
+    api_code = '000022'
+    service_name = 'Account Flag Enquiry'
+
+    with open(request_file, 'r') as req_file, open(response_file, 'r') as resp_file, open(output_file, 'w') as outfile:
+        # Read request and response from their respective files
+        request_json = json.loads(req_file.readline().strip())
+        response_json = json.loads(resp_file.readline().strip())
+
+        # 1. Insert statement for request map
+        request_map_field_name = f"{api_code}_REQUEST_MAP"
+        request_insert = generate_insert_statement(api_code, request_map_field_name, request_json, 'REQUEST_MAP', service_name)
+        outfile.write(request_insert)
+
+        # 2. Insert statement for response map
+        response_map_field_name = f"{api_code}_RESPONSE_MAP"
+        response_insert = generate_insert_statement(api_code, response_map_field_name, response_json, 'RESPONSE_MAP', service_name)
+        outfile.write(response_insert)
+
+        # 3. Insert statement for endpoint URL
+        endpoint_url = 'http://eissiuat.sbi.co.in:3001/AccountFlag_bth/enquiry/accounts'
+        endpoint_url_field_name = f"{api_code}_ENDPOINT_URL"
+        endpoint_url_insert = generate_insert_statement(api_code, endpoint_url_field_name, endpoint_url, 'ENDPOINT_URL', service_name)
+        outfile.write(endpoint_url_insert)
+
+        # 4. Insert statement for timeout
+        timeout_value = '15'
+        timeout_field_name = f"{api_code}_TIME_OUT"
+        timeout_insert = generate_insert_statement(api_code, timeout_field_name, timeout_value, 'TIME_OUT', service_name)
+        outfile.write(timeout_insert)
+
+# File paths for request and response JSON, and SQL output
+request_file = 'request.jsonl'
+response_file = 'response.jsonl'
+output_file = 'output.sql'
+
+# Generate the SQL insert statements
+create_sql_insert_statements(request_file, response_file, output_file)
+
+
+
+
+
+
+
+
 
 
 
