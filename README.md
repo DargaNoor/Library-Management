@@ -1,3 +1,47 @@
+
+import json
+
+def generate_update_statement(req1_file, req2_file, output_file):
+    with open(req1_file, 'r') as f1, open(req2_file, 'r') as f2, open(output_file, 'w') as out_file:
+        # Load JSON data from the files
+        req1 = json.load(f1)
+        req2 = json.load(f2)
+        
+        # Find fields in req1 that are missing in req2
+        missing_fields = {key: value for key, value in req1.items() if key not in req2}
+        
+        # Base query components
+        table_name = "details"
+        column_name = "request_data"
+        
+        # Generate WHERE clause using all fields from req1
+        where_clause = " AND ".join([f"{column_name}->>'{key}' = '{value}'" for key, value in req1.items()])
+        
+        # Generate SET clause for missing fields from req1, setting their values in req2
+        set_clause = ", ".join([f"{column_name}->>'{key}' = '{value}'" for key, value in missing_fields.items()])
+
+        # Construct the final UPDATE query if there are missing fields
+        if missing_fields:
+            update_query = f"UPDATE {table_name} SET {set_clause} WHERE {where_clause};\n"
+            out_file.write(update_query)
+            print("Update statement written to output file.")
+        else:
+            print("No missing fields. No update needed.")
+
+# File paths
+req1_file = 'req1.json'
+req2_file = 'req2.json'
+output_file = 'update.sql'
+
+# Execute function
+generate_update_statement(req1_file, req2_file, output_file)
+
+
+
+
+
+
+
 import json
 from datetime import datetime
 
