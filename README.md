@@ -1,4 +1,128 @@
 
+
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
+import java.util.Base64;
+
+public class AesGcmEncryption {
+
+    public static String AESEncrypt_GCM(String message, String key) {
+        try {
+            // Convert key to byte array
+            byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
+            
+            // Ensure key length is valid for AES (16 bytes for AES-128)
+            if (keyBytes.length != 16) {
+                throw new IllegalArgumentException("Key must be 16 bytes (128 bits)");
+            }
+
+            // Generate Initialization Vector (IV) - 12 bytes for AES-GCM
+            byte[] iv = new byte[12];
+            SecureRandom secureRandom = new SecureRandom();
+            secureRandom.nextBytes(iv);
+
+            // Create AES SecretKeySpec
+            SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, "AES");
+
+            // Initialize Cipher for AES-GCM
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(128, iv); // 128-bit authentication tag
+            cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, gcmParameterSpec);
+
+            // Encrypt the message
+            byte[] plaintextBytes = message.getBytes(StandardCharsets.UTF_8);
+            byte[] ciphertextBytes = cipher.doFinal(plaintextBytes);
+
+            // Combine IV, Ciphertext, and Authentication Tag
+            byte[] combined = new byte[iv.length + ciphertextBytes.length];
+            System.arraycopy(iv, 0, combined, 0, iv.length);
+            System.arraycopy(ciphertextBytes, 0, combined, iv.length, ciphertextBytes.length);
+
+            // Encode result to Base64 for easy transport/storage
+            return Base64.getEncoder().encodeToString(combined);
+        } catch (Exception e) {
+            return "JavaEncryptionError: " + e.toString();
+        }
+    }
+
+    public static void main(String[] args) {
+        String message = "YourMessageHere";
+        String key = "1234567890123456"; // 16-byte key
+
+        String encryptedMessage = AESEncrypt_GCM(message, key);
+        System.out.println("Encrypted Message: " + encryptedMessage);
+    }
+}
+
+
+
+
+
+
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
+import java.util.Base64;
+
+public class AesGcmEncryption {
+
+    public static String AESEncrypt_GCM(String message, String key) {
+        try {
+            // Convert key to bytes
+            byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
+            // Use first 12 bytes of the key as IV
+            byte[] iv = new byte[12];
+            System.arraycopy(keyBytes, 0, iv, 0, 12);
+
+            // Generate SecretKeySpec
+            SecretKeySpec secretKey = new SecretKeySpec(keyBytes, "AES");
+
+            // Initialize cipher in AES/GCM/NoPadding mode
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            GCMParameterSpec gcmSpec = new GCMParameterSpec(128, iv);
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey, gcmSpec);
+
+            // Encrypt the message
+            byte[] plaintextBytes = message.getBytes(StandardCharsets.UTF_8);
+            byte[] ciphertextBytes = cipher.doFinal(plaintextBytes);
+
+            // Combine IV, Ciphertext, and Tag
+            byte[] combined = new byte[iv.length + ciphertextBytes.length];
+            System.arraycopy(iv, 0, combined, 0, iv.length);
+            System.arraycopy(ciphertextBytes, 0, combined, iv.length, ciphertextBytes.length);
+
+            // Convert to Base64 string
+            return Base64.getEncoder().encodeToString(combined);
+
+        } catch (Exception e) {
+            // Handle exception and return error message
+            return "X-JavaError: " + e.toString();
+        }
+    }
+
+    public static void main(String[] args) {
+        // Test the function
+        String key = "123456789012345678901234"; // 24-byte key
+        String message = "Hello, IBM ACE!";
+        String encryptedMessage = AESEncrypt_GCM(message, key);
+        System.out.println("Encrypted Message: " + encryptedMessage);
+    }
+}
+
+
+
+
+
+
 import json
 
 def generate_update_statement(req1_file, req2_file, output_file):
