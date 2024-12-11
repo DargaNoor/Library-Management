@@ -60,6 +60,133 @@ public class AesGcmEncryption {
 }
 
 
+import javax.crypto.Cipher;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
+public class AesGcmDecryption {
+
+    public static String AESDecrypt_GCM(String message, String key) {
+        try {
+            // Validate input
+            if (message == null || message.trim().isEmpty()) {
+                return "JavaDecryptionError: Request body is empty";
+            }
+
+            // Convert key to byte array
+            byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
+
+            // Ensure key length is valid for AES (16 bytes for AES-128)
+            if (keyBytes.length != 16) {
+                throw new IllegalArgumentException("Key must be 16 bytes (128 bits)");
+            }
+
+            // Decode the Base64 input message
+            byte[] combined = Base64.getDecoder().decode(message);
+
+            // Extract IV (12 bytes), Ciphertext, and Tag (last 16 bytes)
+            byte[] iv = new byte[12];
+            byte[] tag = new byte[16];
+            byte[] ciphertext = new byte[combined.length - iv.length - tag.length];
+
+            System.arraycopy(combined, 0, iv, 0, iv.length);
+            System.arraycopy(combined, combined.length - tag.length, tag, 0, tag.length);
+            System.arraycopy(combined, iv.length, ciphertext, 0, ciphertext.length);
+
+            // Initialize Cipher for AES-GCM
+            SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, "AES");
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(128, iv); // 128-bit authentication tag
+            cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, gcmParameterSpec);
+
+            // Combine ciphertext and tag for decryption
+            byte[] decryptedBytes = cipher.doFinal(ciphertext);
+
+            // Convert decrypted bytes to string
+            return new String(decryptedBytes, StandardCharsets.UTF_8);
+
+        } catch (Exception e) {
+            return "JavaDecryptionError: " + e.toString();
+        }
+    }
+
+    public static void main(String[] args) {
+        String encryptedMessage = "YourBase64EncryptedMessageHere";
+        String key = "1234567890123456"; // 16-byte key
+
+        String decryptedMessage = AESDecrypt_GCM(encryptedMessage, key);
+        System.out.println("Decrypted Message: " + decryptedMessage);
+    }
+}
+
+
+
+
+
+,.........
+
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
+import java.util.Base64;
+
+public class AesGcmEncryption {
+
+    public static String AESEncrypt_GCM(String message, String key) {
+        try {
+            // Convert key to byte array
+            byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
+            
+            // Ensure key length is valid for AES (16 bytes for AES-128)
+            if (keyBytes.length != 16) {
+                throw new IllegalArgumentException("Key must be 16 bytes (128 bits)");
+            }
+
+            // Generate Initialization Vector (IV) - 12 bytes for AES-GCM
+            byte[] iv = new byte[12];
+            SecureRandom secureRandom = new SecureRandom();
+            secureRandom.nextBytes(iv);
+
+            // Create AES SecretKeySpec
+            SecretKeySpec secretKeySpec = new SecretKeySpec(keyBytes, "AES");
+
+            // Initialize Cipher for AES-GCM
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(128, iv); // 128-bit authentication tag
+            cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, gcmParameterSpec);
+
+            // Encrypt the message
+            byte[] plaintextBytes = message.getBytes(StandardCharsets.UTF_8);
+            byte[] ciphertextBytes = cipher.doFinal(plaintextBytes);
+
+            // Combine IV, Ciphertext, and Authentication Tag
+            byte[] combined = new byte[iv.length + ciphertextBytes.length];
+            System.arraycopy(iv, 0, combined, 0, iv.length);
+            System.arraycopy(ciphertextBytes, 0, combined, iv.length, ciphertextBytes.length);
+
+            // Encode result to Base64 for easy transport/storage
+            return Base64.getEncoder().encodeToString(combined);
+        } catch (Exception e) {
+            return "JavaEncryptionError: " + e.toString();
+        }
+    }
+
+    public static void main(String[] args) {
+        String message = "YourMessageHere";
+        String key = "1234567890123456"; // 16-byte key
+
+        String encryptedMessage = AESEncrypt_GCM(message, key);
+        System.out.println("Encrypted Message: " + encryptedMessage);
+    }
+}
+
+
 
 
 
