@@ -1,3 +1,50 @@
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
+
+public class HashAndBase64Encode {
+
+    public static String hashAndBase64Encode(String encryptedData) throws NoSuchAlgorithmException {
+        // Convert the encrypted data string to bytes
+        byte[] dataBytes = encryptedData.getBytes();
+
+        // Create a MessageDigest instance for SHA-256
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+
+        // Perform the hash computation
+        byte[] hashedBytes = digest.digest(dataBytes);
+
+        // Encode the hashed bytes using Base64
+        String base64EncodedHash = Base64.getEncoder().encodeToString(hashedBytes);
+
+        return base64EncodedHash;
+    }
+
+    public static void main(String[] args) {
+        try {
+            // Example encrypted data
+            String encryptedData = "your-encrypted-data";
+
+            // Perform hash and Base64 encoding
+            String result = hashAndBase64Encode(encryptedData);
+
+            // Print the result
+            System.out.println("Base64 Encoded Hash: " + result);
+        } catch (NoSuchAlgorithmException e) {
+            System.err.println("Error: SHA-256 algorithm not found.");
+            e.printStackTrace();
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
 <?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:dfdl="http://www.ogf.org/dfdl/dfdl-1.0/" xmlns:fn="http://www.w3.org/2005/xpath-functions" xmlns:ibmDfdlExtn="http://www.ibm.com/dfdl/extensions" xmlns:ibmSchExtn="http://www.ibm.com/schema/extensions" xmlns:recFixLengthFieldsFmt="http://www.ibm.com/dfdl/RecordFixLengthFieldFormat">
 
     <xsd:import namespace="http://www.ibm.com/dfdl/RecordFixLengthFieldFormat" schemaLocation="IBMdefined/RecordFixLengthFieldFormat.xsd"/>
