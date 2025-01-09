@@ -1,3 +1,25 @@
+public static String generateNonce(int length) {
+        // Ensure the minimum length is at least 8
+        if (length < 8) {
+            throw new IllegalArgumentException("Nonce length must be at least 8");
+        }
+
+        // Define the characters to use in the nonce
+        String characterSet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        SecureRandom random = new SecureRandom();
+        StringBuilder nonce = new StringBuilder();
+
+        // Generate random characters
+        for (int i = 0; i < length; i++) {
+            int index = random.nextInt(characterSet.length());
+            nonce.append(characterSet.charAt(index));
+        }
+
+        return nonce.toString();
+    }
+
+
+
 private static String bytesToHex(byte[] bytes) {
     StringBuilder hexString = new StringBuilder();
     for (byte b : bytes) {
