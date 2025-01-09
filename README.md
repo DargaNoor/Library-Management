@@ -1,3 +1,57 @@
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+
+public class HmacAuthentication {
+
+    public static void main(String[] args) throws Exception {
+        String clientKey = "your-client-key";
+        String clientSecret = "your-client-secret";
+        String httpMethod = "POST";
+        String requestUri = "https://sso.loylty.com/abc/fffw3242342";
+        String payloadHash = "170AE002EFA016D1AB3CC2CF82B4E2B57BE2E7FCE92D4DB1355D25718A039EBC";
+        long timestamp = System.currentTimeMillis(); // Current time in milliseconds
+        String nonce = "randomNonce123"; // Example nonce (ensure it's unique)
+
+        // Step 1: Build the string (hmac_string)
+        String hmacString = String.format(
+            "%s|%s|%s|%d|%s",
+            clientKey, httpMethod, requestUri, timestamp, payloadHash
+        );
+
+        // Step 2: Generate the HMAC signature
+        String signature = generateHmacSignature(hmacString, clientSecret);
+
+        // Step 3: Build the Authorization header
+        String authorizationHeader = String.format(
+            "sign auth: %s:%s:%s:%d",
+            clientKey, signature, nonce, timestamp
+        );
+
+        // Print the Authorization header
+        System.out.println("Authorization Header: " + authorizationHeader);
+    }
+
+    // Generate HMAC-SHA256 signature
+    public static String generateHmacSignature(String data, String secret) throws Exception {
+        Mac mac = Mac.getInstance("HmacSHA256");
+        SecretKeySpec secretKeySpec = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+        mac.init(secretKeySpec);
+        byte[] hmacBytes = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
+        return Base64.getEncoder().encodeToString(hmacBytes); // Encode the result in Base64
+    }
+}
+
+
+
+
+
+
+
+
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
