@@ -1,3 +1,73 @@
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.util.Base64;
+import java.util.UUID;
+
+public class HMACSignatureGenerator {
+
+    public static String generateSignature(String clientId, String clientSecret, String method, String uri, String payload) throws Exception {
+        // Step 1: Generate current timestamp and nonce
+        String timestamp = String.valueOf(System.currentTimeMillis());
+        String nonce = UUID.randomUUID().toString();
+
+        // Step 2: Hash the payload (if payload is empty, use an empty string)
+        String payloadHash = hashSHA256(payload);
+
+        // Step 3: Create the HMAC string
+        String hmacString = String.join("|", clientId, method, uri, timestamp, payloadHash);
+
+        // Step 4: Compute HMAC signature using the client secret
+        String signature = computeHMAC(clientSecret, hmacString);
+
+        // Step 5: Build the Authorization header
+        return String.format("sign auth:%s:%s:%s:%s", clientId, signature, nonce, timestamp);
+    }
+
+    private static String hashSHA256(String data) throws NoSuchAlgorithmException {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] hashBytes = digest.digest(data.getBytes(StandardCharsets.UTF_8));
+        return bytesToHex(hashBytes);
+    }
+
+    private static String computeHMAC(String secret, String data) throws Exception {
+        Mac mac = Mac.getInstance("HmacSHA256");
+        SecretKeySpec secretKeySpec = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+        mac.init(secretKeySpec);
+        byte[] hmacBytes = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
+        return bytesToHex(hmacBytes);
+    }
+
+    private static String bytesToHex(byte[] bytes) {
+        StringBuilder hexString = new StringBuilder();
+        for (byte b : bytes) {
+            String hex = Integer.toHexString(0xff & b);
+            if (hex.length() == 1) hexString.append('0');
+            hexString.append(hex);
+        }
+        return hexString.toString();
+    }
+
+    public static void main(String[] args) {
+        try {
+            String clientId = "1000";
+            String clientSecret = "your_client_secret";
+            String method = "POST";
+            String uri = "https://sso.loylty.com/abc/fffw3242342";
+            String payload = "170AE002EFA016D1AB3CC2CF82B4E2B57BE2E7FCE92D4DB1355D25718A039EBC";
+
+            String authorizationHeader = generateSignature(clientId, clientSecret, method, uri, payload);
+            System.out.println("Authorization Header: " + authorizationHeader);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
