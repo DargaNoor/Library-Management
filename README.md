@@ -1,3 +1,26 @@
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import org.apache.commons.codec.binary.Hex;
+
+public class GenerateSHA256 {
+
+    public static String generateSHA256(String payload) throws NoSuchAlgorithmException {
+        // Get the instance of SHA-256 digest
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+
+        // Convert payload to bytes and calculate the hash
+        byte[] hashBytes = digest.digest(payload.getBytes());
+
+        // Convert the byte array into a hex string
+        return Hex.encodeHexString(hashBytes);
+    }
+}
+
+
+
+
+....
+.
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
