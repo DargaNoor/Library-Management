@@ -1,4 +1,120 @@
+import javax.crypto.Cipher;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
+import java.util.Base64;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 
+public class EncryptionUtility {
+
+    private static final int KeyBitSize = 256;
+    private static final int NonceBitSize = 256;
+    private static final int MacBitSize = 128;
+
+    // Encryption function with all parameters as strings
+    public static String simpleEncrypt(String secretMessage, String keyString, String nonSecretPayloadString) throws Exception {
+        if (secretMessage == null || secretMessage.isEmpty())
+            throw new IllegalArgumentException("Secret Message Required!");
+
+        byte[] key = keyString.getBytes(StandardCharsets.UTF_8);
+        byte[] nonSecretPayload = nonSecretPayloadString != null ? nonSecretPayloadString.getBytes(StandardCharsets.UTF_8) : new byte[0];
+
+        if (key.length != KeyBitSize / 8)
+            throw new IllegalArgumentException("Key needs to be " + KeyBitSize + " bit!");
+
+        // Convert secretMessage to bytes
+        byte[] plainText = secretMessage.getBytes(StandardCharsets.UTF_8);
+
+        // Generate random nonce
+        byte[] nonce = new byte[NonceBitSize / 8];
+        new SecureRandom().nextBytes(nonce);
+
+        // Initialize AES-GCM Cipher
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
+        GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(MacBitSize, nonce);
+        cipher.init(Cipher.ENCRYPT_MODE, keySpec, gcmParameterSpec);
+
+        // Encrypt the message
+        byte[] cipherText = cipher.doFinal(plainText);
+
+        // Assemble the final encrypted message
+        ByteArrayOutputStream combinedStream = new ByteArrayOutputStream();
+        DataOutputStream binaryWriter = new DataOutputStream(combinedStream);
+        binaryWriter.write(nonSecretPayload); // Write non-secret payload
+        binaryWriter.write(nonce);           // Write nonce
+        binaryWriter.write(cipherText);      // Write cipher text
+
+        // Return Base64 encoded string
+        return Base64.getEncoder().encodeToString(combinedStream.toByteArray());
+    }
+
+    // Decryption function with all parameters as strings
+    public static String simpleDecrypt(String encryptedMessage, String keyString, String nonSecretPayloadLengthString) throws Exception {
+        if (encryptedMessage == null || encryptedMessage.isEmpty())
+            throw new IllegalArgumentException("Encrypted Message Required!");
+
+        byte[] key = keyString.getBytes(StandardCharsets.UTF_8);
+        int nonSecretPayloadLength = Integer.parseInt(nonSecretPayloadLengthString);
+
+        if (key.length != KeyBitSize / 8)
+            throw new IllegalArgumentException("Key needs to be " + KeyBitSize + " bit!");
+
+        // Decode Base64 encoded encrypted message
+        byte[] encryptedBytes = Base64.getDecoder().decode(encryptedMessage);
+
+        // Extract non-secret payload, nonce, and cipher text
+        byte[] nonSecretPayload = new byte[nonSecretPayloadLength];
+        System.arraycopy(encryptedBytes, 0, nonSecretPayload, 0, nonSecretPayloadLength);
+
+        byte[] nonce = new byte[NonceBitSize / 8];
+        System.arraycopy(encryptedBytes, nonSecretPayloadLength, nonce, 0, nonce.length);
+
+        byte[] cipherText = new byte[encryptedBytes.length - nonSecretPayloadLength - nonce.length];
+        System.arraycopy(encryptedBytes, nonSecretPayloadLength + nonce.length, cipherText, 0, cipherText.length);
+
+        // Initialize AES-GCM Cipher for decryption
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
+        GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(MacBitSize, nonce);
+        cipher.init(Cipher.DECRYPT_MODE, keySpec, gcmParameterSpec);
+
+        // Decrypt the cipher text
+        byte[] plainText = cipher.doFinal(cipherText);
+
+        // Return decrypted message as a string
+        return new String(plainText, StandardCharsets.UTF_8);
+    }
+
+    public static void main(String[] args) {
+        try {
+            // Example usage with all parameters as strings
+            String secretKey = "4B6150645367566B5970337336763979"; // 32-char secret key
+            String secretMessage = "Test";
+            String nonSecretPayload = ""; // Optional, can be empty
+
+            // Encrypt the message
+            String encryptedMessage = simpleEncrypt(secretMessage, secretKey, nonSecretPayload);
+            System.out.println("Encrypted Text: " + encryptedMessage);
+
+            // Decrypt the message
+            String decryptedMessage = simpleDecrypt(encryptedMessage, secretKey, "0");
+            System.out.println("Decrypted Text: " + decryptedMessage);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
+
+
+
+
+//////////////////
 package org.example;
 
 import javax.crypto.Cipher;
