@@ -19,12 +19,12 @@ Request time stamp separated by colon ‘:’. The format for the Authorization 
 header named “sign_auth”.
 Sample sudo code steps to generate request hmac signature:
 E.g. CLIENT ID: 1000, HTTP Method: POST,Nonce: ABC123456789, Timestamp:1599378798000
-Request URI: https://uatdemo.loylty.com/demo
+Request URI: https://uar.yrl.com/demo
 Payload: { “name”:”Loylty Rewardz” }
 1. Hash request payload:
 hashbody = Base64.Encode(SHA256(“{ “name”:”Loylty Rewardz” }”))
 2. Request URI encode:
-encodedUri = URLEncoder.encode(https://uatdemo.loylty.com/demo”).toLower()
+encodedUri = URLEncoder.encode(https://ua.url.com/demo”).toLower()
 3. Build raw hmac string:
 rawHmacString = 1000|POST|encodedUri|ABC123456789|1599378798000|hashbody
 4. Hash rawHmacString using HMAC-SHA256 algorithm and CLIENT SECRET and then encode using
