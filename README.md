@@ -1,3 +1,72 @@
+HMAC Request Signature Generation
+The client application needs to follow belowsteps to generate HMAC signature authentication:
+1. Client should build a string by combining all the data that will be sent, this string contains the
+following parameters (CLIENT ID, HTTP method, encoded request URI, nonce, request time
+stamp, SHA256 string representation of the request pay load).
+2. Request time stamp is calculated using UNIX time (number of seconds since Jan. 1st, 1970)to
+overcome any issues related to a different time zone between client and server.
+3. Nonce is an arbitrary string used only once.
+4. RequestURI should be encoded using html urlencoder and then lower case.
+5. Hash request payload using SHA256 algorithm and encode using base64.
+6. Client will hash this large string built in the step 1 using a hash algorithm HMAC-SHA256 and
+the CLIENT SECRET assigned to it and then encode using base64, the result for this hash is a
+unique signature for this request.
+7. The signature needs to be sent in the Authorization header using a custom scheme “sign_auth”.
+The data in the Authorization header will contain the CLIENT KEY, Signature, nonce and
+Request time stamp separated by colon ‘:’. The format for the Authorization header will be like:
+[sign_auth] : [ClientKey:Signature:Nonce:Timestamp].
+8. Client send the request as usual along with the data generated in step 7 in the Authorization
+header named “sign_auth”.
+Sample sudo code steps to generate request hmac signature:
+E.g. CLIENT ID: 1000, HTTP Method: POST,Nonce: ABC123456789, Timestamp:1599378798000
+Request URI: https://uatdemo.loylty.com/demo
+Payload: { “name”:”Loylty Rewardz” }
+1. Hash request payload:
+hashbody = Base64.Encode(SHA256(“{ “name”:”Loylty Rewardz” }”))
+2. Request URI encode:
+encodedUri = URLEncoder.encode(https://uatdemo.loylty.com/demo”).toLower()
+3. Build raw hmac string:
+rawHmacString = 1000|POST|encodedUri|ABC123456789|1599378798000|hashbody
+4. Hash rawHmacString using HMAC-SHA256 algorithm and CLIENT SECRET and then encode using
+base64.
+signature = Base64.Encode(HMAC-SHA256(rawHmacString, CLIENT_SECRET))
+5. Prepare sign_auth value:
+sign_auth = CLIENT_KEY:signature:Nonce:Timestamp
+Note: In case of GET request or POST request without payload append empty string in place of
+hashbody.
+
+
+HMAC Response Signature Generation
+The client application needs to follow below steps to generate HMAC signature authentication:
+1. Client should use the same Client Key and Client Secret that was used to generate the request.
+2. Client should build a string by combining all the data that is received in response, this string
+contains the following parameters (CLIENT ID, HTTP Status, encoded request URI, nonce, request
+time stamp, and SHA256 string representation of the response body).
+hmac_string = CLIENT ID + “|” + HTTP-Status + "|" + Encoded URL + "|" + Nonce + "|" +
+Timestamp + "|" + Base64.encode(SHA256(Response body))
+HTTP-Status =200
+Request URL = https://uatdemo.loylty.com/demo
+Nonce = ABC123456789(Same nonce value as passed in request)
+Timestamp = 1599378798000 (Same timestamp value as passed in request)
+SHA256(Response body) =
+C6ED656BCA63C0BE27128D54DEC93F9A615D6E06CD1BEDA5574FD33FCD25E90A
+hmac_string = 1000|200|
+https%3a%2f%2fuatdemo.loylty.com%2fdemo|ABC123456789|1599378798000
+|C6ED656BCA63C0BE27128D54DEC93F9A615D6E06CD1BEDA5574FD33FCD25E90A
+3. Generate the HMACValue
+HMACValue = HMAC-SHA256(hmac_string, Client Secret))
+HMACValue = HMAC-SHA256 (1000|200|
+https%3a%2f%2fuatdemo.loylty.com%2fdemo|ABC123456789|1599378798000|C6ED656
+BCA63C0BE27128D54DEC93F9A615D6E06CD1BEDA5574FD33FCD25E90A)
+Signature = Base64.encode(HMACValue)
+Signature
+=Base64.encode(A79844C1BC90E1E6A615FDFDCE56A3BD8BB344BCE1A75F0C6D1F9A6
+9D3252B13)
+4. Validate generated Signature with value received in “sign_auth” response Header The
+format for the Server Authorization header will be like: [sign_auth:
+ClientKey:Signature:Nonce:Timestamp].
+
+
 public static String generateNonce(int length) {
         // Ensure the minimum length is at least 8
         if (length < 8) {
