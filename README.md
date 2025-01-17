@@ -45,7 +45,7 @@ time stamp, and SHA256 string representation of the response body).
 hmac_string = CLIENT ID + “|” + HTTP-Status + "|" + Encoded URL + "|" + Nonce + "|" +
 Timestamp + "|" + Base64.encode(SHA256(Response body))
 HTTP-Status =200
-Request URL = https://uatdemo.loylty.com/demo
+Request URL = https://ura.col/coldemo
 Nonce = ABC123456789(Same nonce value as passed in request)
 Timestamp = 1599378798000 (Same timestamp value as passed in request)
 SHA256(Response body) =
