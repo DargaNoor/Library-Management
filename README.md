@@ -1,3 +1,37 @@
+public class Main {
+    public static void main(String[] args) throws Exception {
+        String clientId = "1000";
+        String clientSecret = "your_client_secret";
+        String clientKey = "your_client_key";
+        String httpMethod = "POST";
+        String requestUri = "https://uatdemo.loylty.com/demo";
+        String nonce = "ABC123456789";
+        long timestamp = 1599378798000L;
+        String payload = "{ \"name\":\"Loylty Rewardz\" }";
+
+        // Generate the signature
+        String signature = HMACUtility.generateSignature(clientId, httpMethod, requestUri, nonce, timestamp, payload, clientSecret);
+
+        // Prepare Authorization Header
+        String authorizationHeader = String.format("sign_auth: %s:%s:%s:%d", clientKey, signature, nonce, timestamp);
+        System.out.println("Authorization Header: " + authorizationHeader);
+
+        // Verify the signature
+        String httpStatus = "200";
+        String responseBody = "{ \"response\":\"Success\" }";
+        boolean isValid = HMACVerification.verifySignature(signature, clientId, httpStatus, requestUri, nonce, timestamp, responseBody, clientSecret);
+        System.out.println("Is signature valid: " + isValid);
+    }
+}
+
+
+
+
+
+
+
+
+
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
