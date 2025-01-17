@@ -1,3 +1,130 @@
+
+package org.example;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
+import java.util.Base64;
+
+
+
+
+public class EncryptionDec {
+
+    private static final int KeyBitSize = 256;
+    private static final int NonceBitSize = 256;
+    private static final int MacBitSize = 128;
+
+    public static String simpleEncrypt(String secretMessage, byte[] key, byte[] nonSecretPayload) throws Exception {
+        if (secretMessage == null || secretMessage.isEmpty())
+            throw new IllegalArgumentException("Secret Message Required!");
+
+        byte[] plainText = secretMessage.getBytes(StandardCharsets.UTF_8);
+        byte[] cipherText = simpleEncrypt(plainText, key, nonSecretPayload);
+
+        return Base64.getEncoder().encodeToString(cipherText);
+    }
+    public static byte[] simpleEncrypt(byte[] secretMessage, byte[] key, byte[] nonSecretPayload) throws Exception {
+        //User Error Checks
+        if (key == null || key.length != KeyBitSize / 8)
+            throw new IllegalArgumentException(String.format("Key needs to be %d bit!", KeyBitSize));
+
+        if (secretMessage == null || secretMessage.length == 0)
+            throw new IllegalArgumentException("Secret Message Required!");
+
+        //Non-secret Payload Optional
+        nonSecretPayload = nonSecretPayload != null ? nonSecretPayload : new byte[0];
+
+        //Using random nonce large enough not to repeat
+        byte[] nonce = new byte[NonceBitSize / 8];
+        new SecureRandom().nextBytes(nonce);
+
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
+        GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(MacBitSize, nonce);
+        cipher.init(Cipher.ENCRYPT_MODE, keySpec, gcmParameterSpec);
+
+        //Generate Cipher Text With Auth Tag
+        byte[] cipherText = cipher.doFinal(secretMessage);
+
+        //Assemble Message
+        ByteArrayOutputStream combinedStream = new ByteArrayOutputStream();
+        DataOutputStream binaryWriter = new DataOutputStream(combinedStream);
+        //Prepend Authenticated Payload
+        binaryWriter.write(nonSecretPayload);
+        //Prepend Nonce
+        binaryWriter.write(nonce);
+        //Write Cipher Text
+        binaryWriter.write(cipherText);
+
+        return combinedStream.toByteArray();
+    }
+
+    public static String  simpleDecrypt(String encryptedMessage, byte[] key, int nonSecretPayloadLength) throws Exception {
+        if (encryptedMessage == null || encryptedMessage.isEmpty())
+            throw new IllegalArgumentException("Encrypted Message Required!");
+
+        byte[] cipherText = Base64.getDecoder().decode(encryptedMessage);
+        byte[] plainText = simpleDecrypt(cipherText, key, nonSecretPayloadLength);
+        return plainText == null ? null : new String(plainText, StandardCharsets.UTF_8);
+    }
+
+
+    private static byte[] simpleDecrypt(byte[] encryptedMessage, byte[] key, int nonSecretPayloadLength) throws Exception {
+    // User Error Checks
+        if (key == null || key.length != KeyBitSize / 8)
+            throw new IllegalArgumentException("Key needs to be " + KeyBitSize + " bit!");
+
+        if (encryptedMessage == null || encryptedMessage.length == 0)
+            throw new IllegalArgumentException("Encrypted Message Required!");
+
+        try {
+        // Grab Payload and Nonce
+        byte[] nonSecretPayload = new byte[nonSecretPayloadLength];
+        System.arraycopy(encryptedMessage, 0, nonSecretPayload, 0, nonSecretPayloadLength);
+
+        byte[] nonce = new byte[NonceBitSize / 8];
+        System.arraycopy(encryptedMessage, nonSecretPayloadLength, nonce, 0, nonce.length);
+
+        byte[] cipherText = new byte[encryptedMessage.length - nonSecretPayloadLength - nonce.length];
+        System.arraycopy(encryptedMessage, nonSecretPayloadLength + nonce.length, cipherText, 0, cipherText.length);
+
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
+        GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(MacBitSize, nonce);
+        cipher.init(Cipher.DECRYPT_MODE, keySpec, gcmParameterSpec);
+
+        // Decrypt Cipher Text
+        byte[] plainText = cipher.doFinal(cipherText);
+
+        return plainText;
+    } catch (Exception e) {
+        // Return null if it doesn't authenticate
+        return null;
+    }
+}
+
+
+    public static void main(String[] args) {
+        // String secretMessage, byte[] key, byte[] nonSecretPayload
+        String secretKey = "4B6150645367566B5970337336763979";
+        try {
+
+            String EncryptedText = simpleEncrypt("Test", secretKey.getBytes(), null);
+			String DecryptedText = simpleDecrypt(value, secretKey.getBytes(), 0);
+            System.out.println("\n" + "EncryptedText" + EncryptedText);
+            System.out.println("\n" + "DecryptedText" + DecryptedText);
+        } catch (Exception e) {
+            System.out.println("Error");
+        }
+    }
+}
+
+--------------------------------------
 public class Main {
     public static void main(String[] args) throws Exception {
         String clientId = "1000";
