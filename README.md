@@ -1,3 +1,94 @@
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.Base64;
+
+public class HMACUtility {
+
+    public static String generateSignature(String clientId, String httpMethod, String requestUri, String nonce, 
+                                           long timestamp, String payload, String clientSecret) throws Exception {
+        // Step 1: Hash the request payload
+        String hashedPayload = hashSHA256Base64(payload);
+
+        // Step 2: Encode the request URI
+        String encodedUri = URLEncoder.encode(requestUri, StandardCharsets.UTF_8.name()).toLowerCase();
+
+        // Step 3: Build the raw HMAC string
+        String rawHmacString = String.format("%s|%s|%s|%s|%d|%s",
+                clientId, httpMethod, encodedUri, nonce, timestamp, hashedPayload);
+
+        // Step 4: Hash the raw HMAC string with HMAC-SHA256 and client secret
+        String signature = hmacSHA256Base64(rawHmacString, clientSecret);
+
+        return signature;
+    }
+
+    private static String hashSHA256Base64(String input) throws Exception {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] hashedBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+        return Base64.getEncoder().encodeToString(hashedBytes);
+    }
+
+    private static String hmacSHA256Base64(String data, String secret) throws Exception {
+        SecretKeySpec secretKeySpec = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+        Mac mac = Mac.getInstance("HmacSHA256");
+        mac.init(secretKeySpec);
+        byte[] hmacBytes = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
+        return Base64.getEncoder().encodeToString(hmacBytes);
+    }
+}
+
+
+
+public class HMACVerification {
+
+    public static boolean verifySignature(String receivedSignature, String clientId, String httpStatus, 
+                                          String responseUri, String nonce, long timestamp, 
+                                          String responseBody, String clientSecret) throws Exception {
+        // Step 1: Hash the response body
+        String hashedResponseBody = hashSHA256Base64(responseBody);
+
+        // Step 2: Encode the response URI
+        String encodedUri = URLEncoder.encode(responseUri, StandardCharsets.UTF_8.name()).toLowerCase();
+
+        // Step 3: Build the raw HMAC string
+        String rawHmacString = String.format("%s|%s|%s|%s|%d|%s",
+                clientId, httpStatus, encodedUri, nonce, timestamp, hashedResponseBody);
+
+        // Step 4: Hash the raw HMAC string with HMAC-SHA256 and client secret
+        String generatedSignature = hmacSHA256Base64(rawHmacString, clientSecret);
+
+        // Step 5: Compare generated signature with received signature
+        return receivedSignature.equals(generatedSignature);
+    }
+
+    private static String hashSHA256Base64(String input) throws Exception {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] hashedBytes = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+        return Base64.getEncoder().encodeToString(hashedBytes);
+    }
+
+    private static String hmacSHA256Base64(String data, String secret) throws Exception {
+        SecretKeySpec secretKeySpec = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+        Mac mac = Mac.getInstance("HmacSHA256");
+        mac.init(secretKeySpec);
+        byte[] hmacBytes = mac.doFinal(data.getBytes(StandardCharsets.UTF_8));
+        return Base64.getEncoder().encodeToString(hmacBytes);
+    }
+}
+
+
+
+
+
+
+
+
+
+
 HMAC Request Signature Generation
 The client application needs to follow belowsteps to generate HMAC signature authentication:
 1. Client should build a string by combining all the data that will be sent, this string contains the
