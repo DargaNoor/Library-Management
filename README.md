@@ -1,3 +1,46 @@
+
+CREATE COMPUTE MODULE ExtractJSONData
+    CREATE FUNCTION Main() RETURNS BOOLEAN
+    BEGIN
+        -- Declare variables
+        DECLARE jsonString CHARACTER;
+        DECLARE jsonBlob BLOB;
+        DECLARE jsonObject REFERENCE;
+        DECLARE jsonData REFERENCE;
+
+        -- Retrieve JSON string from Environment Variable
+        SET jsonString = Environment.Variable.MyJSON;
+
+        -- Trim unwanted spaces or hidden characters
+        SET jsonString = TRIM(jsonString);
+
+        -- Debugging: Store the raw JSON string for verification
+        SET Environment.Debug.RawJSON = jsonString;
+
+        -- Convert JSON string to a BLOB (UTF-8 encoding)
+        SET jsonBlob = CAST(jsonString AS BLOB CCSID 1208);
+
+        -- Create a JSON domain to store the parsed JSON
+        CREATE LASTCHILD OF Environment DOMAIN 'JSON' NAME 'ParsedJSON';
+
+        -- Convert BLOB to JSON (use ASBITSTREAM with proper encoding)
+        SET Environment.ParsedJSON = CAST(ASBITSTREAM(jsonBlob, 1208, 1208) AS JSON CCSID 1208);
+
+        -- Reference the JSON object
+        SET jsonObject = Environment.ParsedJSON;
+
+        -- Extract the "Data" field
+        SET jsonData = jsonObject.Data;
+
+        -- Assign extracted "Data" field to OutputRoot for propagation
+        CREATE LASTCHILD OF OutputRoot DOMAIN 'JSON' NAME 'Data';
+        SET OutputRoot.Data = jsonData;
+
+        RETURN TRUE;
+    END;
+END MODULE;
+
+
 CREATE COMPUTE MODULE ExtractJSONData
     CREATE FUNCTION Main() RETURNS BOOLEAN
     BEGIN
