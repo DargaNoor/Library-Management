@@ -1,3 +1,36 @@
+CREATE COMPUTE MODULE ExtractJSONData
+    CREATE FUNCTION Main() RETURNS BOOLEAN
+    BEGIN
+        -- Declare necessary variables
+        DECLARE jsonString CHARACTER;
+        DECLARE jsonObject REFERENCE;
+        DECLARE jsonData REFERENCE;
+
+        -- Assign the JSON string from Environment variable
+        SET jsonString = Environment.Variable.MyJSON;
+
+        -- Remove unwanted whitespace or non-printable characters (if needed)
+        SET jsonString = TRIM(jsonString);
+
+        -- Ensure JSON parsing is successful
+        CREATE LASTCHILD OF Environment DOMAIN('JSON');
+        
+        -- Use PARSE to properly parse the JSON
+        SET Environment.JSON.Data = PARSE(jsonString, OPTIONS RootBitStream, 'JSON', NULL, NULL);
+
+        -- Reference the JSON object
+        SET jsonObject = Environment.JSON.Data;
+
+        -- Extract the "Data" field
+        SET jsonData = jsonObject.Data;
+
+        -- Assign the extracted Data field to OutputRoot.JSON
+        CREATE LASTCHILD OF OutputRoot DOMAIN('JSON');
+        SET OutputRoot.JSON.Data = jsonData;
+
+        RETURN TRUE;
+    END;
+END MODULE;
 "{\"ReturnCode\": 200,\"ReturnMsg\": \"Success\",\"Data\": {\"@odata.context\": \"https://www.sbimf.com/api/investment-ideas/$metadata#investmentideas(Id,LastModified,PublicationDate,DateCreated,IncludeInSitemap,UrlName,Feature3,Feature1,Feature5,FundIds,ScrollerNote,Feature2,Note,Description,Feature4,Title,ScrollerSubHeading)\",\"value\": [{\"Id\": \"6804db79-2048-4882-a67a-782a8d7f8244\",\"LastModified\": \"2024-06-13T07:04:53Z\",\"PublicationDate\": \"2022-01-26T10:49:32Z\",\"DateCreated\": \"2022-01-26T10:49:32Z\",\"IncludeInSitemap\": true,\"UrlName\": \"all-weather-investments\",\"Feature3\": \"Dynamic Asset Allocation\",\"Feature1\": \"3 Years +\",\"Feature5\": null,\"FundIds\": \"41,595\",\"ScrollerNote\": null,\"Feature2\": \"Wealth Creation\",\"Note\": \"SBI Balanced Advantage Fund \\n SBI Balanced Advantage Fund invests in equity & debt securities based on the market condition. Can act as an ideal choice for those looking for an optimal equity-debt allocation at all times\\n \\n \\n SBI Multi Asset Allocation Fund \\n SBI Multi Asset Allocation Fundmajorly invests in a portfolio of non – correlated asset classes to lower the volatility through diversification & also to capture the potential upside in equity, debt & gold.\",\"Description\": \" Letexperts do the hard-work, invest in funds that offer dynamic portfolio management solutions. They try to maintain the right mix ofasset classes based on macro environments and fund house views.\",\"Feature4\": null,\"Title\": \"All Weather Investing\",\"ScrollerSubHeading\": \"Markets can fluctuate, your peace of mind shouldn't\"},{\"Id\": \"f62b92c7-c873-4a66-a4e0-eee9ad56e9e6\",\"LastModified\": \"2024-10-01T09:53:22Z\",\"PublicationDate\": \"2021-10-13T15:04:27Z\",\"DateCreated\": \"2021-10-13T15:04:27Z\",\"IncludeInSitemap\": true,\"UrlName\": \"plan-for-your-retirement\",\"Feature3\": \"Disciplined Investment Approach\",\"Feature1\": \"5 Years +\",\"Feature5\": null,\"FundIds\": \"578,579,580,581\",\"ScrollerNote\": \"A lock-in period of 5 years\",\"Feature2\": \"Wealth Creation & Retirement corpus\",\"Note\": \"Investment amount will be locked in for 5 years or until completion of 65 years of age whichever is earlier. Select a fund of your choice or opt in for Auto-Rebalance and let the experts handle it,\",\"Description\": \"A one stop solution to meet your retirement planning needs. Choose from 4 different plans based on your life stage and risk preference.\",\"Feature4\": null,\"Title\": \"Plan for your retirement\",\"ScrollerSubHeading\": \"A one stop solution to meet your retirement planning needs\"},{\"Id\": \"3ca54123-0ae2-408c-aaab-30f1a816ddde\",\"LastModified\": \"2024-06-13T07:09:10Z\",\"PublicationDate\": \"2021-10-13T15:30:30Z\",\"DateCreated\": \"2021-10-13T15:30:31Z\",\"IncludeInSitemap\": true,\"UrlName\": \"Indias-leaders\",\"Feature3\": \"Stability\",\"Feature1\": \"5 Years +\",\"Feature5\": null,\"FundIds\": \"43,2\",\"ScrollerNote\": \"\",\"Feature2\": \"Potential Wealth Creation\",\"Note\": \" SBI Bluechip fund \\n SBI Bluechip Fund is a large cap fund, which predominantly invests up to the 100th stock as per market cap. These are well establised companies and relatively less volatile.\\n \\n \\n SBI Large & Mid Cap Fund \\n SBI Large & Mid Cap fund primarily invests in the 101stto the 250th stock as per market cap.It is a combination of bluechips & strong emerging companies which have the potential to grow. \\n \\n \\n \\n 1st -250th company in terms of full market capitalization. \",\"Description\": \"Get access to India's most powerful companies in a single go .The curation of funds covers India's top 250 companies! Adding the suggested funds to your portfolio can aid in long term wealth creation.\",\"Feature4\": null,\"Title\": \"India's leaders\",\"ScrollerSubHeading\": \"Invest in India's leading companies\"},{\"Id\": \"0229221e-1c4d-4432-932c-afe2d7140f72\",\"LastModified\": \"2024-06-13T07: 05: 31Z\",\"PublicationDate\": \"2021-09-25T11: 30: 19Z\",\"DateCreated\": \"2021-09-25T11: 30: 20Z\",\"IncludeInSitemap\": false,\"UrlName\": \"smart-money\",\"Feature3\": \"Less Volatility\",\"Feature1\": \"Invest Upto 3 Months\",\"Feature5\": null,\"FundIds\": \"19\",\"ScrollerNote\": \"Instant Redemption Available\",\"Feature2\": \"Redeem Funds Instantly*\",\"Note\": \"*SBI Liquid Fund additionally, provides instant redemption upto ?50, 000 or 90% of redeemable balance whichever is lower\",\"Description\": \"An alternative to traditional savings avenues\",\"Feature4\": null,\"Title\": \"Smart Save\",\"ScrollerSubHeading\": \"Potential to earn more than traditional savings instruments\"},{\"Id\": \"b24838e2-8f97-44ec-ae36-cf3d4c60a35a\",\"LastModified\": \"2024-06-13T07: 08: 46Z\",\"PublicationDate\": \"2022-01-20T14: 20: 26Z\",\"DateCreated\": \"2022-01-20T14: 20: 30Z\",\"IncludeInSitemap\": true,\"UrlName\": \"beginner's-kit\",\"Feature3\": \"Tax Saving through ELSS\",\"Feature1\": \"Manage Market Volatility\",\"Feature5\": null,\"FundIds\": \"595,3,150\",\"ScrollerNote\": \"\",\"Feature2\": \"Potential Wealth Creation\",\"Note\": \" SBI Balanced Advantage Fund \\n A balanced fund can help to manage market volatility effectively, it is a dynamic asset allocation fund which invests in equity and debt depending on the current market conditions with the aim to balance the risk and the reward.\\n \\n \\n SBI Long Term Equity Fund \\n An ELSS fund, this fund offers the benefit of tax saving with the potential of wealth creation in a single go.\\n \\n \\n SBI Savings Fund \\n A money market fund, such funds invest in money market instruments which are perceived to be liquid in nature. This gives your money an opportunity to earn reasonable returns while having the convenience to access it whenever required\",\"Description\": \"This kit contains funds from 3 categories suitable for majority of first time investors - Balanced Funds, ELSS Funds & Money Market Funds. \\n \",\"Feature4\": null,\"Title\": \"Beginner's Kit\",\"ScrollerSubHeading\": \"Funds hand-picked for first time investors\"}]} }"
 
 
