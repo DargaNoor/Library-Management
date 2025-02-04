@@ -1,3 +1,168 @@
+private static final String JCE_PROVIDER = "BC";
+
+	private static final String ASYMMETRIC_ALGO = "RSA/ECB/OAEPwithSHA-256andMGF1Padding";
+
+	private static final int AES_KEY_SIZE_BITS = 256;
+
+	// IV length - last 96 bits of ISO format time stamp
+	private static final int IV_SIZE = 12;
+
+	// Additional authentication data - last 128 bits of ISO format time stamp
+	private static final int AAD_SIZE = 16;
+
+	// Authentication tag length - in bits
+	private static final int AUTH_TAG_SIZE_BITS = 128;
+
+	private static final String CERTIFICATE_TYPE = "X.509";
+
+
+public EncryptedData encrypt(String plainText, PrivateKey ourPrivateKey, PublicKey theirPublicKey) throws Exception {
+
+		EncryptedData encryptedData = new EncryptedData();
+
+		try {
+			// Generate 256-bit random encryption key (randomKey) using GCM algorithm
+			KeyGenerator kgen = KeyGenerator.getInstance("AES", JCE_PROVIDER);
+			kgen.init(AES_KEY_SIZE_BITS);
+			SecretKey key = kgen.generateKey();
+			byte[] randomKey = key.getEncoded();
+
+			// Get timestamp (isoDateStr) in ISO format (yyyy-MM-dd'T'HH:mm:ss ex:
+			// 2021-12-08T14:29:35).
+			Date d = new Date();
+			SimpleDateFormat sd = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+			String ts = sd.format(d.getTime());
+			byte[] tsInBytes = ts.getBytes("UTF-8");
+
+			// Get last 12 bytes of isoDateStr to use it as initial vector (initialVector)
+			// and last 16 bytes to use it as AAD (salt) for encryption
+
+			// Get initial vector
+			byte[] initialVector = Arrays.copyOfRange(tsInBytes, tsInBytes.length - IV_SIZE, tsInBytes.length);
+
+			// Get additional authentication data
+			byte[] additionalAuthData = Arrays.copyOfRange(tsInBytes, tsInBytes.length - AAD_SIZE, tsInBytes.length);
+
+			// Encrypt data using random key
+			AEADParameters aeadParam = new AEADParameters(new KeyParameter(randomKey), AUTH_TAG_SIZE_BITS,
+					initialVector, additionalAuthData);
+			GCMBlockCipher gcmb = new GCMBlockCipher(new AESEngine());
+			gcmb.init(true, aeadParam);
+
+			byte[] plainTextBytes = plainText.getBytes("UTF-8");
+			int outputSize = gcmb.getOutputSize(plainTextBytes.length);
+			byte[] result = new byte[outputSize];
+			int processLen = gcmb.processBytes(plainTextBytes, 0, plainTextBytes.length, result, 0);
+			gcmb.doFinal(result, processLen);
+
+			String encryptedString = Base64.getEncoder().encodeToString(result);
+
+			// Calculate signature
+			Signature signature = Signature.getInstance("SHA256withRSA");
+			signature.initSign(ourPrivateKey);
+			//signature.update(plainText.getBytes(StandardCharsets.UTF_8));
+			signature.update(computeSHA256Hash(plainText)); //required for WA-webhook code
+
+			byte[] signatureBytes = signature.sign();
+			String plainTextSignature = Base64.getEncoder().encodeToString(signatureBytes);
+
+			// Encrypt the randomKey with public key using
+			// RSA/ECB/OAEPwithSHA-256andMGF1Padding algorithm
+			// and encode the same using base64 algorithm (encryptedRandomKey)
+			Cipher pkCipher = Cipher.getInstance(ASYMMETRIC_ALGO);
+			pkCipher.init(Cipher.ENCRYPT_MODE, theirPublicKey);
+			byte[] encDataBytes = pkCipher.doFinal(randomKey);
+
+			String encryptedRandomKey = new String(Base64.getEncoder().encode(encDataBytes));
+
+			//System.out.println("Encrypted text: " + encryptedString);
+
+			encryptedData.setEncyptedText(encryptedString);
+			encryptedData.setEncryptionKey(encryptedRandomKey);
+			encryptedData.setPlainEncryptionKey(Base64.getEncoder().encodeToString(randomKey));
+			encryptedData.setTimestamp(Base64.getEncoder().encodeToString(tsInBytes));
+			encryptedData.setSignature(plainTextSignature);
+
+		} catch (Exception exception) {
+			throw exception;
+		}
+
+		return encryptedData;
+
+	}
+	
+	
+    // Method to compute SHA-256 hash
+    public byte[] computeSHA256Hash(String data) throws Exception {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        return digest.digest(data.getBytes());
+    }
+	
+
+	public String decrypt(String encryptedString, String X_TWIXOR_KEY, String X_TWIXOR_TS, String X_TWIXOR_DS,
+			PrivateKey ourPrivateKey, PublicKey ourPublicKey, PublicKey theirPublicKey) {
+
+		String decryptedString = null;
+
+		try {
+			// Read X-TWIXOR-TS from the response headers and base64 decode to use last 12
+			// bytes as initial vector (initialVector)
+			// and last 16 bytes as AAD (salt).
+
+			String ts = new String(Base64.getDecoder().decode(X_TWIXOR_TS));
+			byte[] tsInBytes = ts.getBytes(StandardCharsets.UTF_8);
+			byte[] iv = Arrays.copyOfRange(tsInBytes, tsInBytes.length - IV_SIZE, tsInBytes.length);
+
+			byte[] aad = Arrays.copyOfRange(tsInBytes, tsInBytes.length - AAD_SIZE, tsInBytes.length);
+
+			// Decrypt the encryptedRandomKey with private key using
+			// RSA/ECB/OAEPwithSHA-256andMGF1Padding algorithm
+			// to get random key (randomKey) with which payload was encrypted.
+
+			Cipher pkCipher = Cipher.getInstance(ASYMMETRIC_ALGO);
+			pkCipher.init(Cipher.DECRYPT_MODE, ourPrivateKey);
+			byte[] decryptedRandonKey = pkCipher.doFinal(Base64.getDecoder().decode(X_TWIXOR_KEY));
+
+			byte[] encryptedPayload = Base64.getDecoder().decode(encryptedString);
+
+			// Decrypt the data using random key
+			AEADParameters aeadParam = new AEADParameters(new KeyParameter(decryptedRandonKey), AUTH_TAG_SIZE_BITS, iv,
+					aad);
+			GCMBlockCipher gcmb = new GCMBlockCipher(new AESEngine());
+			gcmb.init(false, aeadParam);
+
+			int outputSize = gcmb.getOutputSize(encryptedPayload.length);
+			byte[] result = new byte[outputSize];
+			int processLen = gcmb.processBytes(encryptedPayload, 0, encryptedPayload.length, result, 0);
+			gcmb.doFinal(result, processLen);
+
+			decryptedString = new String(result, StandardCharsets.UTF_8);
+
+			// Validate signature
+			Signature signature = Signature.getInstance("SHA256withRSA");
+			signature.initVerify(theirPublicKey);
+			signature.update(decryptedString.getBytes(StandardCharsets.UTF_8));
+
+			if (!signature.verify(Base64.getDecoder().decode(X_TWIXOR_DS.getBytes(StandardCharsets.UTF_8)))) {
+				System.out.println("Signature does not match");
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return decryptedString;
+	}
+ 
+
+
+
+
+
+
+
+
+
 
 CREATE COMPUTE MODULE ExtractJSONData
     CREATE FUNCTION Main() RETURNS BOOLEAN
