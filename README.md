@@ -1,3 +1,90 @@
+
+import javax.crypto.*;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+import java.security.*;
+import java.security.spec.MGF1ParameterSpec;
+import java.security.spec.OAEPParameterSpec;
+import java.security.spec.PSSParameterSpec;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
+
+public class CryptoUtil {
+    
+    private static final int IV_SIZE = 12;
+    private static final int AAD_SIZE = 16;
+    private static final int TAG_LENGTH_BIT = 128;
+    private static final String AES_ALGO = "AES/GCM/NoPadding";
+    private static final String RSA_ALGO = "RSA/ECB/OAEPWithSHA-256AndMGF1Padding";
+    
+    // AES Encryption
+    public static String encryptAES(String plainText, byte[] key, byte[] iv, byte[] aad) throws Exception {
+        Cipher cipher = Cipher.getInstance(AES_ALGO);
+        SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
+        GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(TAG_LENGTH_BIT, iv);
+        cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, gcmParameterSpec);
+        cipher.updateAAD(aad);
+        byte[] encryptedBytes = cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
+        return Base64.getEncoder().encodeToString(encryptedBytes);
+    }
+
+    // AES Decryption
+    public static String decryptAES(String encryptedText, byte[] key, byte[] iv, byte[] aad) throws Exception {
+        Cipher cipher = Cipher.getInstance(AES_ALGO);
+        SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
+        GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(TAG_LENGTH_BIT, iv);
+        cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, gcmParameterSpec);
+        cipher.updateAAD(aad);
+        byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedText));
+        return new String(decryptedBytes, StandardCharsets.UTF_8);
+    }
+
+    // RSA Encryption
+    public static String encryptRSA(String data, byte[] publicKeyBytes) throws Exception {
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        PublicKey publicKey = keyFactory.generatePublic(new X509EncodedKeySpec(publicKeyBytes));
+        Cipher cipher = Cipher.getInstance(RSA_ALGO);
+        cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+        return Base64.getEncoder().encodeToString(cipher.doFinal(data.getBytes(StandardCharsets.UTF_8)));
+    }
+
+    // RSA Decryption
+    public static String decryptRSA(String encryptedData, byte[] privateKeyBytes) throws Exception {
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        PrivateKey privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(privateKeyBytes));
+        Cipher cipher = Cipher.getInstance(RSA_ALGO);
+        cipher.init(Cipher.DECRYPT_MODE, privateKey);
+        return new String(cipher.doFinal(Base64.getDecoder().decode(encryptedData)), StandardCharsets.UTF_8);
+    }
+
+    // Digital Signature Generation
+    public static String signData(String data, byte[] privateKeyBytes) throws Exception {
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        PrivateKey privateKey = keyFactory.generatePrivate(new PKCS8EncodedKeySpec(privateKeyBytes));
+        Signature signature = Signature.getInstance("SHA256withRSA");
+        signature.initSign(privateKey);
+        signature.update(data.getBytes(StandardCharsets.UTF_8));
+        return Base64.getEncoder().encodeToString(signature.sign());
+    }
+
+    // Digital Signature Verification
+    public static boolean verifySignature(String data, String signatureStr, byte[] publicKeyBytes) throws Exception {
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        PublicKey publicKey = keyFactory.generatePublic(new X509EncodedKeySpec(publicKeyBytes));
+        Signature signature = Signature.getInstance("SHA256withRSA");
+        signature.initVerify(publicKey);
+        signature.update(data.getBytes(StandardCharsets.UTF_8));
+        return signature.verify(Base64.getDecoder().decode(signatureStr));
+    }
+}
+
+
+
+
+
+
 private static final String JCE_PROVIDER = "BC";
 
 	private static final String ASYMMETRIC_ALGO = "RSA/ECB/OAEPwithSHA-256andMGF1Padding";
