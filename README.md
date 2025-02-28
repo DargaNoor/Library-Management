@@ -1,3 +1,17 @@
+session.context.set("var://service/response/status-code", "200");
+session.context.set("var://service/response/reason-phrase", "Success");
+
+session.output.write({
+    "status": "success",
+    "errorCode": 0,
+    "message": "Operation completed successfully"
+});
+
+
+
+
+
+
 session.output.write({
     "status": "success",
     "errorCode": 0,
