@@ -1,4 +1,79 @@
 
+
+Read error
+
+12:10:06 PM
+
+multistep
+
+error
+
+92493953
+
+response
+
+10.177.29.24
+
+0x80c00008
+
+mpgw (ROUTER): rule (Routing Response): Implied action Reading input as binary data. failed: Read error
+
+743
+
+Show last 50 100
+
+74.41
+
+5a 3
+
+5931
+
+96t
+
+773
+
+12:10:06 PM
+
+network
+
+error
+
+92493953
+
+10.177.29.24
+
+0x80006c1
+
+mpgw (ROUTER): Error in stream. Descriptor number unavailable. Additional information: Read error (7)
+
+5a 2
+
+12:10:06 ssl PM
+
+error
+
+92493953
+
+10.177.29.24
+
+0x8120002f
+
+ssl-client (OutboundSSL): TLS library error: error:0A000126:SSL routines: unexpected eof while reading
+
+557
+
+713
+
+525
+
+
+
+
+
+
+
+
+
 import javax.crypto.*;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
