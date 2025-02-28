@@ -1,3 +1,33 @@
+if (session.response && typeof session.response === "object") {
+    session.response.statusCode = 200;
+    session.response.reasonPhrase = "Success";
+} else {
+    session.variables.set("var://service/response/status-code", 200);
+    session.variables.set("var://service/response-reason-phrase", "Success");
+}
+
+// Override response body with success message
+session.output.write({
+    "status": "success",
+    "errorCode": 0,
+    "message": "Operation completed successfully"
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 session.context.set("var://service/response/status-code", "200");
 session.context.set("var://service/response/reason-phrase", "Success");
 
