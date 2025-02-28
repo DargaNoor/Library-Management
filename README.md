@@ -1,3 +1,14 @@
+session.output.write({
+    "status": "success",
+    "errorCode": 0,
+    "message": "Operation completed successfully"
+});
+
+// Ensure HTTP response is always 200 OK
+session.response.statusCode = 200;
+session.response.reasonPhrase = "Success";
+
+
 # Library-Management
 Library Management System is a system which maintains the information about the books present in the library, their authors, the members of library to whom books are 
 issued and all. This is very difficult to organize manually. Maintenance of all this information manually is a very complex task. Owing to the advancement of technology, 
