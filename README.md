@@ -1,4 +1,43 @@
-var headers = "";
+
+
+
+
+
+
+
+
+
+var headervar headers = "";
+var body = "";
+
+// Read the input as an XML document
+session.input.readAsXML(function (error, xml) {
+    if (error) {
+        console.error("Error reading input XML: " + error);
+        session.output.write("<error>Failed to parse response</error>");
+        return;
+    }
+
+    // Use XPath to extract values
+    var headersNode = xml.xpath("string(//response/headers)");
+    var bodyNode = xml.xpath("//response/body");
+
+    // Extract headers as a string
+    if (headersNode) {
+        headers = headersNode;
+    }
+
+    // Extract body as a string (convert XML to text)
+    if (bodyNode && bodyNode.length > 0) {
+        body = bodyNode[0].toXMLString();  // Convert XML node to string
+    }
+
+    console.info("Extracted Headers: " + headers);
+    console.info("Extracted Body: " + body);
+
+    // Return the response with headers and body
+    session.output.write("<response><headers>" + headers + "</headers><body>" + body + "</body></response>");
+});s = "";
 var body = "";
 
 // Read the input as an XML document
