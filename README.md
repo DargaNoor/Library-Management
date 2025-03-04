@@ -1,3 +1,9 @@
+var storedHeaders = context.getVariable('var://session/original_response_headers');
+console.info("Retrieved Headers: " + JSON.stringify(storedHeaders));
+session.output.write(storedHeaders);
+
+
+
 
 
 <?xml version="1.0" encoding="UTF-8"?>
