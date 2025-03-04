@@ -1,3 +1,40 @@
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0" 
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    xmlns:dp="http://www.datapower.com/extensions"
+    extension-element-prefixes="dp">
+    
+    <xsl:output method="xml" omit-xml-declaration="yes"/>
+    
+    <!-- Store Response Headers in a Session Variable -->
+    <dp:set-variable name="'var://session/original_response_headers'" 
+                     value="dp:http-response-headers()"/>
+
+    <!-- Debug: Log the stored response headers -->
+    <dp:set-variable name="'var://service/debug_log'"
+                     value="dp:get-variable('var://session/original_response_headers')"/>
+
+    <!-- Pass-through the response body unchanged -->
+    <xsl:template match="/">
+        <xsl:copy-of select="."/>
+    </xsl:template>
+    
+</xsl:stylesheet>
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Capture response headers
 var responseHeaders = context.getVariable('var://headers');
 
