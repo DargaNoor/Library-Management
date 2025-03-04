@@ -1,3 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0" 
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    xmlns:dp="http://www.datapower.com/extensions"
+    extension-element-prefixes="dp">
+    
+    <xsl:output method="xml" omit-xml-declaration="yes"/>
+    
+    <!-- Store Specific Response Headers -->
+    <xsl:variable name="header1">
+        <dp:header name="sign_auth"/>
+    </xsl:variable>
+
+    <xsl:variable name="header2">
+        <dp:header name="Content-Type"/>
+    </xsl:variable>
+
+    <!-- Transform Response: Add Headers to Body -->
+    <xsl:template match="/">
+        <response>
+            <headers>
+                <sign_auth><xsl:value-of select="$header1"/></sign_auth>
+                <content_type><xsl:value-of select="$header2"/></content_type>
+            </headers>
+            <body>
+                <xsl:copy-of select="."/>
+            </body>
+        </response>
+    </xsl:template>
+
+</xsl:stylesheet>
+
+
+
+
 
 
 
