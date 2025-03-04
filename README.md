@@ -1,3 +1,33 @@
+// Capture response headers
+var responseHeaders = context.getVariable('var://headers');
+
+// Store them in a persistent variable
+context.setVariable('var://service/original_response_headers', responseHeaders);
+
+// Log the headers for debugging
+console.info("Stored Response Headers: " + JSON.stringify(responseHeaders));
+
+
+var originalHeaders = context.getVariable('var://service/original_response_headers');
+session.output.write(originalHeaders);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 if (session.response && typeof session.response === "object") {
     session.response.statusCode = 200;
     session.response.reasonPhrase = "Success";
