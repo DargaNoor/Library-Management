@@ -1,3 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0" 
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    xmlns:dp="http://www.datapower.com/extensions"
+    extension-element-prefixes="dp">
+    
+    <xsl:output method="xml" omit-xml-declaration="yes"/>
+    
+    <!-- Capture Response Headers -->
+    <xsl:variable name="responseHeaders">
+        <dp:http-response-headers/>
+    </xsl:variable>
+
+    <!-- Transform Response: Add Headers to Body -->
+    <xsl:template match="/">
+        <response>
+            <headers>
+                <xsl:value-of select="$responseHeaders"/>
+            </headers>
+            <body>
+                <xsl:copy-of select="."/>
+            </body>
+        </response>
+    </xsl:template>
+
+</xsl:stylesheet>
+
+
+
+var headers = "";
+var body = "";
+
+session.input.readAsXML(function (error, xml) {
+    if (error) {
+        console.error("Error reading input XML: " + error);
+        session.output.write("<error>Failed to parse response</error>");
+        return;
+    }
+
+    // Extract Headers and Body from transformed response
+    if (xml) {
+        var headersNode = xml.getElementsByTagName("headers")[0];
+        var bodyNode = xml.getElementsByTagName("body")[0];
+
+        if (headersNode) {
+            headers = headersNode.textContent;
+        }
+
+        if (bodyNode) {
+            body = bodyNode.textContent;
+        }
+    }
+
+    console.info("Extracted Headers: " + headers);
+    console.info("Extracted Body: " + body);
+
+    // Return the response with headers
+    session.output.write("<response><headers>" + headers + "</headers><body>" + body + "</body></response>");
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 var storedHeaders = context.getVariable('var://session/original_response_headers');
 console.info("Retrieved Headers: " + JSON.stringify(storedHeaders));
 session.output.write(storedHeaders);
