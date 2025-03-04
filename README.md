@@ -1,3 +1,38 @@
+var headers = "";
+var body = "";
+
+// Read the input as an XML document
+session.input.readAsXML(function (error, xml) {
+    if (error) {
+        console.error("Error reading input XML: " + error);
+        session.output.write("<error>Failed to parse response</error>");
+        return;
+    }
+
+    // Use XPath to select nodes
+    var headersNode = xml.selectSingleNode("//response/headers");
+    var bodyNode = xml.selectSingleNode("//response/body");
+
+    // Extract headers and body
+    if (headersNode) {
+        headers = headersNode.textContent;
+    }
+    if (bodyNode) {
+        body = bodyNode.toString();  // Convert XML body to a string
+    }
+
+    console.info("Extracted Headers: " + headers);
+    console.info("Extracted Body: " + body);
+
+    // Return the response with headers and body
+    session.output.write("<response><headers>" + headers + "</headers><body>" + body + "</body></response>");
+});
+
+
+
+
+
+
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.0" 
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
