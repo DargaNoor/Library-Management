@@ -1,3 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="1.0" 
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    xmlns:dp="http://www.datapower.com/extensions"
+    extension-element-prefixes="dp">
+    
+    <xsl:output method="xml" omit-xml-declaration="yes"/>
+
+    <!-- Capture Response Headers in Session Variable -->
+    <dp:set-variable name="'var://session/original_response_headers'" 
+                     value="dp:http-response-headers()"/>
+    
+    <!-- Wrap Plain Text Response in XML -->
+    <xsl:template match="/">
+        <response>
+            <headers>
+                <xsl:value-of select="dp:get-variable('var://session/original_response_headers')"/>
+            </headers>
+            <body>
+                <xsl:text><![CDATA[</xsl:text>
+                <xsl:copy-of select="."/>
+                <xsl:text>]]></xsl:text>
+            </body>
+        </response>
+    </xsl:template>
+
+</xsl:stylesheet>
+
+
+
+
+
 <!-- <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp">
 
 <xsl:output method="xml" omit-xml-declaration="yes"/>
