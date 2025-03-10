@@ -1,3 +1,68 @@
+<!-- <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp">
+
+<xsl:output method="xml" omit-xml-declaration="yes"/>
+
+<xsl:variable name="header1">
+    <dp:header name="sign_auth"/>
+</xsl:variable>
+
+<xsl:variable name="header2">
+    <dp:header name="Content-Type"/>
+</xsl:variable>
+
+<xsl:template match="/">
+    <response>
+        <headers>
+            <sign_auth><xsl:value-of select="$header1"/></sign_auth>
+            <content_type><xsl:value-of select="$header2"/></content_type>
+        </headers>
+        <body>
+            <xsl:copy-of select="."/>
+        </body>
+    </response>
+</xsl:template>
+</xsl:stylesheet> -->
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:dp="http://www.datapower.com/extensions" extension-element-prefixes="dp">
+
+<xsl:output method="xml" omit-xml-declaration="yes"/>
+
+<!-- Store Response Headers in a Session Variable -->
+<dp:set-variable name="'var://session/original_response_headers'" 
+                 value="dp:http-response-headers()"/>
+
+<!-- Debug: Log the stored response headers -->
+<!-- <dp:set-variable name="'var://service/debug_log'"
+                 value="dp:get-variable('var://session/original_response_headers')"/> -->
+
+<!-- Pass-through the response body unchanged -->
+<xsl:template match="/">
+    <xsl:copy-of select="."/>
+</xsl:template>
+</xsl:stylesheet>
+
+Transforming the content of INPUT. The transformation local:///sso.xsl is applied. The results are stored in PIPE. failed: illegal character 'K' at offset 0 of http://10.177.29.14:77/users
+illegal character 'K' at offset 0 of http://10.177.29.14:77/users
+The data is :
+KPB4telNWXzfoOv6rSBs5libnRUX/1fQMtWmXYbxGlSn7Mx2fp+eKPB5tOcZA6xxDG6lgBPub3jBCdHkfKUNh72aYJiTPOf0NHFueN64yKt/Ia5gZnASBS577v2yf2nnUkO3y71bDwm42FaaIR5eZnz02V+rvqdazBzWubELSZWV9oEAVdfrPOARVIpqxK9Bo051RDQ95P2Soqkfqw30BBX1CJSnq4ORfXZZPnnvvznQjyUUJ637ZVQDb4ScAB3SFpPe1b7Ae+BS0sLIvqkpA2XZOtKG01/4IGS91ktRAi4Cgu7jNWRB/DwTuTzcJqa7N8XoNlabAnrlow==
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet version="1.0" 
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
