@@ -1,5 +1,119 @@
 package com.sbi.Martech;
 
+import java.io.FileInputStream;
+import java.security.*;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
+import javax.crypto.Cipher;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import org.apache.commons.codec.binary.Base64;
+
+public class EncryptionUtils {
+
+    private static final String CERT_PATH = "/home/aceuser/certs/INS_PCMS.cer";  // Change as per ACE environment
+
+    // Generate AES Key (32 characters)
+    public static String generateAESKey() {
+        SecureRandom rnd = new SecureRandom();
+        int n1 = 10000000 + rnd.nextInt(9999999);
+        String ranNum = String.valueOf(n1);
+        return ranNum + ranNum + ranNum + ranNum;
+    }
+
+    // Load Public Key from Certificate
+    public static String getPublicKey() {
+        try {
+            FileInputStream fin = new FileInputStream(CERT_PATH);
+            CertificateFactory factory = CertificateFactory.getInstance("X.509");
+            X509Certificate certificate = (X509Certificate) factory.generateCertificate(fin);
+            PublicKey publicKey = certificate.getPublicKey();
+            byte[] encodedKey = publicKey.getEncoded();
+            return Base64.encodeBase64String(encodedKey);
+        } catch (Exception e) {
+            return "X-JavaError " + e.getMessage();
+        }
+    }
+
+    // RSA Encryption
+    public static String encryptRSA(String data) {
+        try {
+            String base64PublicKey = getPublicKey();
+            byte[] decodedKey = Base64.decodeBase64(base64PublicKey);
+            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(decodedKey);
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            PublicKey pubKey = keyFactory.generatePublic(keySpec);
+
+            Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, pubKey);
+            byte[] encryptedBytes = cipher.doFinal(data.getBytes("UTF-8"));
+
+            return Base64.encodeBase64String(encryptedBytes);
+        } catch (Exception e) {
+            return "X-JavaError " + e.getMessage();
+        }
+    }
+
+    // AES-GCM Encryption
+    public static String encryptAESGCM(String message, String keyStr) {
+        try {
+            String algorithm = "AES/GCM/NoPadding";
+            byte[] keyBytes = keyStr.getBytes("UTF-8");
+            byte[] iv = Arrays.copyOf(keyBytes, 16);
+
+            SecretKeySpec key = new SecretKeySpec(keyBytes, "AES");
+            GCMParameterSpec gcmSpec = new GCMParameterSpec(128, iv);
+            Cipher cipher = Cipher.getInstance(algorithm);
+            cipher.init(Cipher.ENCRYPT_MODE, key, gcmSpec);
+
+            byte[] encryptedBytes = cipher.doFinal(message.getBytes("UTF-8"));
+            return Base64.encodeBase64String(encryptedBytes);
+        } catch (Exception e) {
+            return "X-JavaError " + e.getMessage();
+        }
+    }
+
+    // AES-GCM Decryption
+    public static String decryptAESGCM(String encryptedMessage, String keyStr) {
+        try {
+            byte[] keyBytes = keyStr.getBytes("UTF-8");
+            byte[] iv = Arrays.copyOf(keyBytes, 16);
+            byte[] encValue = Base64.decodeBase64(encryptedMessage);
+
+            SecretKeySpec secretKey = new SecretKeySpec(keyBytes, "AES");
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            GCMParameterSpec gcmSpec = new GCMParameterSpec(128, iv);
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, gcmSpec);
+
+            byte[] decValue = cipher.doFinal(encValue);
+            return new String(decValue);
+        } catch (Exception e) {
+            return "X-JavaError " + e.getMessage();
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//////
+
+
+package com.sbi.Martech;
+
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
