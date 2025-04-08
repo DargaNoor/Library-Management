@@ -1,3 +1,21 @@
+'{
+
+"mobileNumber": "9940173757",
+
+"otpType": "S",
+
+"template": "Change PIN OTP",
+
+"entityld": "531115787360000002100225",
+
+"productid": "6jmuBHZ8Gr",
+
+"card": "0024"
+
+
+
+
+
 package com.sbi.Martech;
 
 import java.security.*;
