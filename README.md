@@ -41,6 +41,41 @@ session.output.write(JSON.stringify(tokenJson));
 
 
 
+
+
+
+
+
+
+
+
+
+var crypto = require('crypto');
+var username = session.variables.get('var://context/AAA/username');
+
+var accessToken = crypto.randomBytes(16).toString('hex');
+var refreshToken = crypto.randomBytes(16).toString('hex');
+var sessionKey = crypto.randomBytes(32).toString('base64');
+var accessExpiry = Math.floor(Date.now() / 1000) + 3600;
+var refreshExpiry = Math.floor(Date.now() / 1000) + 7200;
+
+var tokenJson = {
+  accessToken: accessToken,
+  accessExpiry: accessExpiry,
+  refreshToken: refreshToken,
+  refreshExpiry: refreshExpiry,
+  sessionKey: sessionKey
+};
+
+var plaintext = JSON.stringify(tokenJson);
+
+// Save it to context to be encrypted by Crypto Binary Encrypt action
+session.input.setBody(plaintext);
+
+
+
+
+
 public static String AESGCMEncrypt(String plaintext, String key) throws Exception {
     byte[] keyBytes = key.getBytes("UTF-8");
     SecretKeySpec secretKey = new SecretKeySpec(keyBytes, "AES");
