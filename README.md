@@ -1,3 +1,46 @@
+// Example GatewayScript before AAA
+var headers = request.headers;
+session.variables.set("var://context/AAA/username", headers['username']);
+session.variables.set("var://context/AAA/password", headers['password']);
+
+
+
+
+
+var crypto = require('crypto');
+var username = session.variables.get('var://context/AAA/username');
+
+// Generate tokens and expiry
+var accessToken = crypto.randomBytes(16).toString('hex');
+var refreshToken = crypto.randomBytes(16).toString('hex');
+var sessionKey = crypto.randomBytes(32).toString('base64');
+var accessExpiry = Math.floor(Date.now() / 1000) + 3600;
+var refreshExpiry = Math.floor(Date.now() / 1000) + 7200;
+
+// Store in var://service/
+session.variables.set('var://service/' + username + '/accessToken', accessToken);
+session.variables.set('var://service/' + username + '/refreshToken', refreshToken);
+session.variables.set('var://service/' + username + '/sessionKey', sessionKey);
+session.variables.set('var://service/' + username + '/accessExpiry', accessExpiry.toString());
+session.variables.set('var://service/' + username + '/refreshExpiry', refreshExpiry.toString());
+
+// Create token JSON
+var tokenJson = {
+  accessToken: accessToken,
+  accessExpiry: accessExpiry,
+  refreshToken: refreshToken,
+  refreshExpiry: refreshExpiry,
+  sessionKey: sessionKey
+};
+
+// Encrypt tokenJson using client public key (done via Crypto Encrypt action in flow)
+// You can pass it to the Crypto Binary Encrypt action or encrypt in script (advanced)
+
+// For now, send plain response (for debug)
+session.output.write(JSON.stringify(tokenJson));
+
+
+
 public static String AESGCMEncrypt(String plaintext, String key) throws Exception {
     byte[] keyBytes = key.getBytes("UTF-8");
     SecretKeySpec secretKey = new SecretKeySpec(keyBytes, "AES");
