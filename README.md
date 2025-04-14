@@ -1,3 +1,47 @@
+<xsl:stylesheet version="1.0"
+  xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+  xmlns:dp="http://www.datapower.com/extensions"
+  extension-element-prefixes="dp">
+    <xsl:output omit-xml-declaration="yes" />
+    <xsl:template match="/">
+        <xsl:variable name="flag1">
+            <xsl:value-of select="dp:variable('var://context/Oauth/flag')"/>
+        </xsl:variable>
+        <xsl:choose>
+            <xsl:when test="$flag1 !='N'">
+                <xsl:variable name="flag2">
+                    <xsl:value-of select="dp:variable('var://context/Oauth/flag')"/>
+                </xsl:variable>
+                <dp:set-variable name="'var://context/Oauth/refreshToken1'" value="$flag1" />
+                <dp:set-local-variable name="refreshToken" value="$flag1" />
+            </xsl:when>
+            <xsl:otherwise>
+                <xsl:variable name="storedRefreshToken">
+                    <xsl:value-of  select="dp:variable('var://context/Oauth/refreshToken1')" />
+                </xsl:variable>
+                <xsl:variable name="users1" >
+                    <xsl:value-of select="dp:local-variable('refreshToken')" />
+                </xsl:variable>
+                <dp:set-variable name="'var://context/Oauth/users'" value="normalize-space($users1)"/>
+                <dp:set-variable name="'var://context/Oauth/users1'" value="normalize-space($storedRefreshToken)"/>
+            </xsl:otherwise>
+        </xsl:choose>
+    </xsl:template>
+</xsl:stylesheet>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Example GatewayScript before AAA
 var headers = request.headers;
 session.variables.set("var://context/AAA/username", headers['username']);
