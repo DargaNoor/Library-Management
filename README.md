@@ -1,3 +1,34 @@
+data '{
+
+"mobile": {
+
+"countryCode": 91,
+
+"value": "9940173757"
+
+},
+
+"entityld": "531115787360000002100225",
+
+"expiryDate": "12/26",
+
+"kit": "360000002",
+
+"newPin": "1234",
+
+"otpDetails": {
+
+"traceNumber": "57369a32-4882-4ad1-aea0-6561b999add3",
+
+"mobileNumber": "9940173757",
+
+"otp": "123456"
+
+}
+
+}'
+
+
 <xsl:stylesheet version="1.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   xmlns:dp="http://www.datapower.com/extensions"
