@@ -1,3 +1,16 @@
+DECLARE matchList CHARACTER '10.177.44.27:5003:PAYMENT_SYS:Payment_S_01','10.177.44.29:5005:PAYMENT_SYS:Payment_S_01','10.177.44.27:5003:PAYMENT_SYS:Payment_S_02';
+
+DECLARE selectQuery CHARACTER 'SELECT name, value FROM your_table WHERE CONCAT(ip,'':'',port,'':'',broker,'':'',eg) IN (' || matchList || ')';
+
+DECLARE refResult REFERENCE TO OutputRoot.XMLNSC.ResultSet;
+SET refResult[] = PASSTHRU(selectQuery);
+
+
+
+
+
+
+
 CREATE COMPUTE MODULE ParseCacheESQL
   CREATE FUNCTION Main() RETURNS BOOLEAN
   BEGIN
