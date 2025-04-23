@@ -1,3 +1,67 @@
+import java.util.*;
+
+public class CacheEntryParser {
+
+    static class CacheEntry {
+        String ip;
+        String port;
+        String system;
+        String label;
+
+        public CacheEntry(String ip, String port, String system, String label) {
+            this.ip = ip;
+            this.port = port;
+            this.system = system;
+            this.label = label;
+        }
+
+        @Override
+        public String toString() {
+            return "IP: " + ip + ", Port: " + port + ", System: " + system + ", Label: " + label;
+        }
+    }
+
+    public static List<CacheEntry> parseInput(String input) {
+        List<CacheEntry> result = new ArrayList<>();
+        String[] parts = input.split("/");
+
+        for (String part : parts) {
+            String[] tokens = part.trim().split(":");
+            if (tokens.length < 4) continue;
+
+            String ip = tokens[0].trim();
+            String port = tokens[1].trim();
+            String system = tokens[2].trim();
+            String label = String.join(":", Arrays.copyOfRange(tokens, 3, tokens.length)).trim();
+
+            result.add(new CacheEntry(ip, port, system, label));
+        }
+
+        return result;
+    }
+
+    public static void main(String[] args) {
+        String input1 = "10.177.44.27:5003:PAYMENT SYS: Payment S 01/10.177.44.29:5005:PAYMENT_SYS : Payment S 01/10.177.44.27:5003: PAYMENT SYS: Payment S 02/10.177.44.29:5005: PAYMENT SYS: Payment S 02";
+        String input2 = "10.177.44.27:5003: PAYMENT SYS: Payment S 03";
+
+        List<CacheEntry> entries1 = parseInput(input1);
+        List<CacheEntry> entries2 = parseInput(input2);
+
+        entries1.forEach(System.out::println);
+        System.out.println("---");
+        entries2.forEach(System.out::println);
+    }
+}
+
+
+
+
+
+
+
+
+
+
 data '{
 
 "mobile": {
@@ -83,71 +147,7 @@ session.variables.set("var://context/AAA/password", headers['password']);
 
 
 var crypto = require('crypto');
-var username = session.variables.get('var://context/AAA/username');
-
-// Generate tokens and expiry
-var accessToken = crypto.randomBytes(16).toString('hex');
-var refreshToken = crypto.randomBytes(16).toString('hex');
-var sessionKey = crypto.randomBytes(32).toString('base64');
-var accessExpiry = Math.floor(Date.now() / 1000) + 3600;
-var refreshExpiry = Math.floor(Date.now() / 1000) + 7200;
-
-// Store in var://service/
-session.variables.set('var://service/' + username + '/accessToken', accessToken);
-session.variables.set('var://service/' + username + '/refreshToken', refreshToken);
-session.variables.set('var://service/' + username + '/sessionKey', sessionKey);
-session.variables.set('var://service/' + username + '/accessExpiry', accessExpiry.toString());
-session.variables.set('var://service/' + username + '/refreshExpiry', refreshExpiry.toString());
-
-// Create token JSON
-var tokenJson = {
-  accessToken: accessToken,
-  accessExpiry: accessExpiry,
-  refreshToken: refreshToken,
-  refreshExpiry: refreshExpiry,
-  sessionKey: sessionKey
-};
-
-// Encrypt tokenJson using client public key (done via Crypto Encrypt action in flow)
-// You can pass it to the Crypto Binary Encrypt action or encrypt in script (advanced)
-
-// For now, send plain response (for debug)
-session.output.write(JSON.stringify(tokenJson));
-
-
-
-
-
-
-
-
-
-
-
-
-var crypto = require('crypto');
-var username = session.variables.get('var://context/AAA/username');
-
-var accessToken = crypto.randomBytes(16).toString('hex');
-var refreshToken = crypto.randomBytes(16).toString('hex');
-var sessionKey = crypto.randomBytes(32).toString('base64');
-var accessExpiry = Math.floor(Date.now() / 1000) + 3600;
-var refreshExpiry = Math.floor(Date.now() / 1000) + 7200;
-
-var tokenJson = {
-  accessToken: accessToken,
-  accessExpiry: accessExpiry,
-  refreshToken: refreshToken,
-  refreshExpiry: refreshExpiry,
-  sessionKey: sessionKey
-};
-
-var plaintext = JSON.stringify(tokenJson);
-
-// Save it to context to be encrypted by Crypto Binary Encrypt action
-session.input.setBody(plaintext);
-
-
+var username = session.variables.get('var://context/AA
 
 
 
