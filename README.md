@@ -1,3 +1,87 @@
+import javax.xml.crypto.dsig.*;
+import javax.xml.crypto.dsig.dom.DOMSignContext;
+import javax.xml.crypto.dsig.keyinfo.*;
+import javax.xml.crypto.dsig.spec.*;
+import java.security.cert.X509Certificate;
+import java.security.KeyStore.PrivateKeyEntry;
+import java.util.Collections;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+
+public Document generateSignValue(Document xmlDoc, boolean includeKeyInfo) throws Exception {
+    XMLSignatureFactory fac = XMLSignatureFactory.getInstance("DOM");
+
+    // SHA-256 digest method
+    Reference ref = fac.newReference(
+        "",
+        fac.newDigestMethod(DigestMethod.SHA256, null),
+        Collections.singletonList(
+            fac.newTransform(Transform.ENVELOPED, (TransformParameterSpec) null)
+        ),
+        null,
+        null
+    );
+
+    // Canonicalization and SignatureMethod using RSA-SHA256
+    SignedInfo sInfo = fac.newSignedInfo(
+        fac.newCanonicalizationMethod(
+            CanonicalizationMethod.INCLUSIVE,
+            (C14NMethodParameterSpec) null
+        ),
+        fac.newSignatureMethod("http://www.w3.org/2001/04/xmldsig-more#rsa-sha256", null),
+        Collections.singletonList(ref)
+    );
+
+    if (this.keyEntry == null) {
+        throw new RuntimeException("Key could not be read for digital signature. Please check value of signature alias and signature password, and restart the Auth Client");
+    }
+
+    X509Certificate x509Cert = (X509Certificate) this.keyEntry.getCertificate();
+    KeyInfo kInfo = includeKeyInfo ? this.getKeyInfo(fac, x509Cert.getPublicKey()) : null;
+
+    DOMSignContext dsc = new DOMSignContext(this.keyEntry.getPrivateKey(), xmlDoc.getDocumentElement());
+
+    XMLSignature signature = fac.newXMLSignature(sInfo, kInfo);
+    signature.sign(dsc);
+
+    Node node = dsc.getParent();
+    return node.getOwnerDocument();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 DECLARE matchList CHARACTER '10.177.44.27:5003:PAYMENT_SYS:Payment_S_01','10.177.44.29:5005:PAYMENT_SYS:Payment_S_01','10.177.44.27:5003:PAYMENT_SYS:Payment_S_02';
 
 DECLARE selectQuery CHARACTER 'SELECT name, value FROM your_table WHERE CONCAT(ip,'':'',port,'':'',broker,'':'',eg) IN (' || matchList || ')';
