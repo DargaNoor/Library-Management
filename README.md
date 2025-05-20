@@ -1,3 +1,27 @@
+-- Serialize Input XML to formatted XML string
+DECLARE xmlBlob BLOB;
+DECLARE xmlString CHARACTER;
+
+-- Step 1: Re-serialize the parsed XML (which corrects formatting)
+SET xmlBlob = ASBITSTREAM(InputRoot.XMLNSC, InputRoot.Properties.Encoding, InputRoot.Properties.CodedCharSetId);
+
+-- Step 2: Convert to CHARACTER string
+SET xmlString = CAST(xmlBlob AS CHARACTER CCSID InputRoot.Properties.CodedCharSetId);
+
+-- Step 3: Send it as raw string (optional)
+SET OutputRoot.BLOB.BLOB = CAST(xmlString AS BLOB CCSID InputRoot.Properties.CodedCharSetId);
+SET OutputRoot.Properties.ContentType = 'text/xml';
+
+
+
+
+-- Copy the parsed XML input to output (forces re-serialization)
+SET OutputRoot.XMLNSC = InputRoot.XMLNSC;
+SET OutputRoot.Properties.ContentType = 'text/xml';
+
+
+
+
 import javax.xml.crypto.dsig.*;
 import javax.xml.crypto.dsig.dom.DOMSignContext;
 import javax.xml.crypto.dsig.keyinfo.*;
