@@ -1,3 +1,151 @@
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.FileInputStream;
+import java.nio.charset.StandardCharsets;
+import java.security.*;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Base64;
+
+public class PidEncryptionUtil {
+
+    public static class EncryptionResult {
+        public final String encryptedData;
+        public final String hmac;
+        public final String skey;
+
+        public EncryptionResult(String encryptedData, String hmac, String skey) {
+            this.encryptedData = encryptedData;
+            this.hmac = hmac;
+            this.skey = skey;
+        }
+    }
+
+    public static EncryptionResult encryptPidBlock(String pidXml, String uidaiCertPath) throws Exception {
+        // 1. Timestamp
+        String timestamp = generateTimestamp();
+
+        // 2. Session Key (32 bytes for AES-256)
+        byte[] sessionKey = generateSecretKey();
+
+        // 3. IV = last 12 bytes of timestamp
+        byte[] iv = getIV(timestamp);
+
+        // 4. AAD = last 16 bytes of timestamp
+        byte[] aad = getAAD(timestamp);
+
+        // 5. SHA-256 Hash of PID
+        byte[] pidHash = sha256Hash(pidXml);
+
+        // 6. AES/GCM Encrypt PID
+        byte[] encryptedPid = encryptAESGCM(pidXml.getBytes(StandardCharsets.UTF_8), sessionKey, iv, aad);
+
+        // 7. AES/GCM Encrypt Hash
+        byte[] encryptedHash = encryptAESGCM(pidHash, sessionKey, iv, aad);
+
+        // 8. RSA Encrypt Session Key using UIDAI Public Certificate
+        byte[] encryptedSessionKey = encryptRSA(sessionKey, uidaiCertPath);
+
+        // 9. Final API Params
+        String encryptedData = Base64.getEncoder().encodeToString((timestamp + new String(encryptedPid, StandardCharsets.ISO_8859_1)).getBytes(StandardCharsets.ISO_8859_1));
+        String hmac = Base64.getEncoder().encodeToString(encryptedHash);
+        String skey = Base64.getEncoder().encodeToString(encryptedSessionKey);
+
+        return new EncryptionResult(encryptedData, hmac, skey);
+    }
+
+    private static String generateTimestamp() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+        return LocalDateTime.now().format(formatter);
+    }
+
+    private static byte[] generateSecretKey() {
+        byte[] key = new byte[32]; // 256-bit AES
+        new SecureRandom().nextBytes(key);
+        return key;
+    }
+
+    private static byte[] getIV(String timestamp) {
+        return timestamp.substring(timestamp.length() - 12).getBytes(StandardCharsets.UTF_8);
+    }
+
+    private static byte[] getAAD(String timestamp) {
+        return timestamp.substring(timestamp.length() - 16).getBytes(StandardCharsets.UTF_8);
+    }
+
+    private static byte[] sha256Hash(String input) throws Exception {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        return digest.digest(input.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static byte[] encryptAESGCM(byte[] data, byte[] key, byte[] iv, byte[] aad) throws Exception {
+        SecretKeySpec keySpec = new SecretKeySpec(key, "AES");
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        GCMParameterSpec gcmSpec = new GCMParameterSpec(128, iv);
+        cipher.init(Cipher.ENCRYPT_MODE, keySpec, gcmSpec);
+        cipher.updateAAD(aad);
+        return cipher.doFinal(data);
+    }
+
+    private static byte[] encryptRSA(byte[] secretKey, String certPath) throws Exception {
+        FileInputStream fis = new FileInputStream(certPath);
+        CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+        X509Certificate cert = (X509Certificate) certFactory.generateCertificate(fis);
+        PublicKey publicKey = cert.getPublicKey();
+
+        Cipher rsaCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        rsaCipher.init(Cipher.ENCRYPT_MODE, publicKey);
+        return rsaCipher.doFinal(secretKey);
+    }
+}
+
+
+
+
+
+
+
+String pidXml = "<Pid ts=\"\" ver=\"2.0\"><Pv otp=\"123456\"/></Pid>";
+String certPath = "/path/to/uidai-public-cert.cer";
+
+PidEncryptionUtil.EncryptionResult result = PidEncryptionUtil.encryptPidBlock(pidXml, certPath);
+
+System.out.println("EncryptedData: " + result.encryptedData);
+System.out.println("Hmac: " + result.hmac);
+System.out.println("Skey: " + result.skey);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 -- Serialize Input XML to formatted XML string
 DECLARE xmlBlob BLOB;
 DECLARE xmlString CHARACTER;
