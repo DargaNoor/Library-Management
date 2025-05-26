@@ -1,3 +1,28 @@
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+
+public class TimestampGenerator {
+
+    public static String generateUIDAITimestamp() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+        return LocalDateTime.now().format(formatter);
+    }
+
+    // Example usage
+    public static void main(String[] args) {
+        String ts = generateUIDAITimestamp();
+        System.out.println("Generated ts: " + ts);
+    }
+}
+
+
+
+
+
+
+
+
+
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
