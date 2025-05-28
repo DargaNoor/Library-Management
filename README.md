@@ -1,3 +1,134 @@
+package com.example.crypto;
+
+import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.io.FileInputStream;
+import java.nio.charset.StandardCharsets;
+import java.security.*;
+import java.security.cert.Certificate;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.Arrays;
+import java.util.Base64;
+
+public class CryptoUtil {
+
+    private PrivateKey privateKey;
+
+    public CryptoUtil(String pfxPath, String password) throws Exception {
+        FileInputStream fis = new FileInputStream(pfxPath);
+        KeyStore keystore = KeyStore.getInstance("PKCS12");
+        keystore.load(fis, password.toCharArray());
+        String alias = keystore.aliases().nextElement();
+        Key key = keystore.getKey(alias, password.toCharArray());
+        if (key instanceof PrivateKey) {
+            privateKey = (PrivateKey) key;
+        }
+    }
+
+    public String RSADecrypt(byte[] encryptedAndEncodedData) throws Exception {
+        byte[] plainBytes = decrypt(encryptedAndEncodedData, false);
+        return new String(plainBytes, StandardCharsets.UTF_8);
+    }
+
+    public byte[] decrypt(byte[] datatosegregate, boolean fromUSBToken) throws Exception {
+        byte[][] verdata = split(datatosegregate, 11);
+        String verNumber = new String(verdata[0], StandardCharsets.US_ASCII);
+        byte[] verData = verNumber.equals("VERSION_1.0") ? verdata[1] : datatosegregate;
+
+        byte[][] data = split(verData, 294);
+        byte[] publicKeyBlock = data[0];
+        byte[] mergedata = data[1];
+
+        byte[][] datafrompad = split(mergedata, 32);
+        byte[] padding = datafrompad[0];
+        byte[] mergedatafromkey = datafrompad[1];
+
+        byte[][] datafromkey = split(mergedatafromkey, 256);
+        byte[] encryptedsecret = datafromkey[0];
+        byte[] encryptedmessage = datafromkey[1];
+
+        byte[] secretkey;
+        if (fromUSBToken) {
+            throw new UnsupportedOperationException("USB Token decryption not supported in this version.");
+        } else {
+            secretkey = getkey(encryptedsecret, padding);
+        }
+
+        byte[] plaintext = decryptmessage(encryptedmessage, padding, secretkey);
+        byte[][] result = split(plaintext, 32);
+
+        byte[] hash = generateHash(result[1]);
+        if (!Arrays.equals(hash, result[0])) {
+            throw new Exception("File is Corrupt or invalid !");
+        }
+
+        return result[1];
+    }
+
+    private byte[] getkey(byte[] encryptedsecret, byte[] padding) throws Exception {
+        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        cipher.init(Cipher.DECRYPT_MODE, privateKey);
+        return cipher.doFinal(encryptedsecret);
+    }
+
+    private byte[] decryptmessage(byte[] encryptedmessage, byte[] iv, byte[] key) throws Exception {
+        SecretKeySpec skeySpec = new SecretKeySpec(key, "AES");
+        IvParameterSpec ivSpec = new IvParameterSpec(iv);
+        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        cipher.init(Cipher.DECRYPT_MODE, skeySpec, ivSpec);
+        return cipher.doFinal(encryptedmessage);
+    }
+
+    private byte[] generateHash(byte[] data) throws Exception {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        return digest.digest(data);
+    }
+
+    private byte[][] split(byte[] source, int splitLength) {
+        int numberOfChunks = (int) Math.ceil((double) source.length / splitLength);
+        byte[][] result = new byte[numberOfChunks][];
+        for (int i = 0; i < numberOfChunks; i++) {
+            int start = i * splitLength;
+            int length = Math.min(source.length - start, splitLength);
+            result[i] = Arrays.copyOfRange(source, start, start + length);
+        }
+        return result;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 public string RSADecrypt(Byte[] encryptedAndEncodedData)
 {
     string plain_text = string.Empty;
