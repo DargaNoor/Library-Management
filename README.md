@@ -1,5 +1,52 @@
 package com.example.crypto;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Base64;
+
+public class Main {
+
+    public static void main(String[] args) {
+        try {
+            // Provide path to your .pfx certificate file and password
+            String pfxPath = "/path/to/your/certificate.pfx";
+            String pfxPassword = "yourPfxPassword";
+
+            // Initialize CryptoUtil with the certificate
+            CryptoUtil cryptoUtil = new CryptoUtil(pfxPath, pfxPassword);
+
+            // Example: load the encrypted data (Base64 encoded) from a file or string
+            // Here we assume you have Base64 encoded encrypted data in a file or string
+            String base64EncryptedData = Files.readString(Paths.get("/path/to/encryptedData.b64")).trim();
+
+            // Decode Base64 to get the encrypted byte array
+            byte[] encryptedData = Base64.getDecoder().decode(base64EncryptedData);
+
+            // Call RSADecrypt method to decrypt
+            String decryptedText = cryptoUtil.RSADecrypt(encryptedData);
+
+            System.out.println("Decrypted text: " + decryptedText);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.err.println("Error occurred: " + e.getMessage());
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+package com.example.crypto;
+
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
