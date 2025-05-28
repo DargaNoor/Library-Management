@@ -1,3 +1,43 @@
+private byte[][] extractFixedChunks(byte[] source, int... lengths) throws Exception {
+    byte[][] result = new byte[lengths.length][];
+    int offset = 0;
+
+    for (int i = 0; i < lengths.length; i++) {
+        if (offset + lengths[i] > source.length) {
+            throw new Exception("Invalid input: expected length " + lengths[i] + " at chunk " + i);
+        }
+        result[i] = Arrays.copyOfRange(source, offset, offset + lengths[i]);
+        offset += lengths[i];
+    }
+
+    return result;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 package com.example.crypto;
 
 import java.nio.file.Files;
