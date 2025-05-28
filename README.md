@@ -1,3 +1,19 @@
+private List<byte[]> splitToChunks(byte[] source, int chunkSize) {
+    List<byte[]> result = new ArrayList<>();
+    int index = 0;
+    while (index < source.length) {
+        int end = Math.min(index + chunkSize, source.length);
+        result.add(Arrays.copyOfRange(source, index, end));
+        index = end;
+    }
+    return result;
+}
+
+
+
+
+
+
 private byte[][] extractFixedChunks(byte[] source, int... lengths) throws Exception {
     byte[][] result = new byte[lengths.length][];
     int offset = 0;
