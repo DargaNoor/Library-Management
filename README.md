@@ -1,3 +1,39 @@
+import org.bouncycastle.crypto.AsymmetricBlockCipher;
+import org.bouncycastle.crypto.encodings.OAEPEncoding;
+import org.bouncycastle.crypto.engines.RSAEngine;
+import org.bouncycastle.crypto.params.AsymmetricKeyParameter;
+import org.bouncycastle.crypto.params.RSAKeyParameters;
+import org.bouncycastle.crypto.util.PrivateKeyFactory;
+import org.bouncycastle.crypto.digests.SHA256Digest;
+
+public byte[] getKey(byte[] encryptedKey, byte[] pad, PrivateKey javaPrivateKey) throws Exception {
+    // Convert Java PrivateKey to Bouncy Castle format
+    AsymmetricKeyParameter privateKeyParam = PrivateKeyFactory.createKey(javaPrivateKey.getEncoded());
+
+    // Create OAEP encoding with SHA-256 digest and custom label (pad)
+    OAEPEncoding oaep = new OAEPEncoding(new RSAEngine(), new SHA256Digest(), pad);
+    oaep.init(false, privateKeyParam); // false for decryption
+
+    // Decrypt the data
+    return oaep.processBlock(encryptedKey, 0, encryptedKey.length);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 private byte[] getkey(byte[] encryptkey, byte[] pad)
 {
     //ECDecryptor.CSPDecryption csp = new CSPDecryption();
