@@ -1,3 +1,46 @@
+import javax.crypto.Cipher;
+import javax.crypto.spec.OAEPParameterSpec;
+import javax.crypto.spec.MGF1ParameterSpec;
+import javax.crypto.spec.PSource;
+import java.security.PrivateKey;
+import java.security.spec.AlgorithmParameterSpec;
+import java.security.MessageDigest;
+
+public byte[] getKey(byte[] encryptedKey, byte[] pad, PrivateKey privateKey) throws Exception {
+    // Define OAEP parameters with SHA-256 and the label
+    OAEPParameterSpec oaepParams = new OAEPParameterSpec(
+        "SHA-256",                               // Digest algorithm
+        "MGF1",                                  // Mask generation function
+        MGF1ParameterSpec.SHA256,                // MGF1 Digest algorithm
+        new PSource.PSpecified(pad)              // Label (padding)
+    );
+
+    Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding");
+    cipher.init(Cipher.DECRYPT_MODE, privateKey, oaepParams);
+
+    return cipher.doFinal(encryptedKey);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import org.bouncycastle.crypto.AsymmetricBlockCipher;
 import org.bouncycastle.crypto.encodings.OAEPEncoding;
 import org.bouncycastle.crypto.engines.RSAEngine;
