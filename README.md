@@ -1,3 +1,27 @@
+private byte[] getkey(byte[] encryptkey, byte[] pad)
+{
+    //ECDecryptor.CSPDecryption csp = new CSPDecryption();
+    //csp.Decrypt(encryptkey, pad);
+
+    IAsymmetricBlockCipher cipher = new OaepEncoding(new RsaEngine(), new Sha256Digest(), pad);
+    AsymmetricKeyParameter privateKey = this.GetPrivateKey(this.m_Location, m_Password);
+    cipher.Init(false, privateKey);
+    return cipher.ProcessBlock(encryptkey, 0, encryptkey.Length);
+    //return null;
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
 public static byte[][] split(byte[] source, int lengthOfFirst)
 {
     byte[] first = new byte[lengthOfFirst];
