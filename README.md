@@ -1,5 +1,36 @@
 import javax.crypto.Cipher;
 import javax.crypto.spec.OAEPParameterSpec;
+import javax.crypto.spec.PSource;
+import java.security.spec.MGF1ParameterSpec;
+
+public byte[] getkey(byte[] encryptedKey, byte[] pad, PrivateKey privateKey) throws Exception {
+    // If pad is custom, pass it; if not, use DEFAULT
+    PSource.PSpecified pSource = (pad != null && pad.length > 0)
+        ? new PSource.PSpecified(pad)
+        : PSource.PSpecified.DEFAULT;
+
+    OAEPParameterSpec oaepParams = new OAEPParameterSpec(
+        "SHA-256", "MGF1", MGF1ParameterSpec.SHA256, pSource
+    );
+
+    Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding");
+    cipher.init(Cipher.DECRYPT_MODE, privateKey, oaepParams);
+    return cipher.doFinal(encryptedKey);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.OAEPParameterSpec;
 import javax.crypto.spec.MGF1ParameterSpec;
 import javax.crypto.spec.PSource;
 import java.security.PrivateKey;
