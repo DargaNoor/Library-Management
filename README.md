@@ -1,3 +1,24 @@
+public static byte[][] split(byte[] source, int lengthOfFirst)
+{
+    byte[] first = new byte[lengthOfFirst];
+    byte[] second = new byte[source.Length - lengthOfFirst];
+    Array.Copy(source, 0, first, 0, lengthOfFirst);
+    Array.Copy(source, lengthOfFirst, second, 0, source.Length - lengthOfFirst);
+
+    byte[][] finalByte = { first, second };
+
+
+    return finalByte;
+}
+
+
+
+
+
+
+
+
+
 private List<byte[]> splitToChunks(byte[] source, int chunkSize) {
     List<byte[]> result = new ArrayList<>();
     int index = 0;
