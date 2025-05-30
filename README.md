@@ -1,4 +1,49 @@
 import javax.crypto.Cipher;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
+public byte[] decryptMessage(byte[] encryptedMessage, byte[] vector, byte[] aesKey) throws Exception {
+    // Extract 16-byte IV from vector starting at index 8
+    byte[] m_IV = new byte[16];
+    System.arraycopy(vector, 8, m_IV, 0, 16);
+
+    // Create AES key and IV spec
+    SecretKeySpec keySpec = new SecretKeySpec(aesKey, "AES");
+    IvParameterSpec ivSpec = new IvParameterSpec(m_IV);
+
+    // Initialize cipher in AES/CFB/NoPadding mode
+    Cipher cipher = Cipher.getInstance("AES/CFB/NoPadding");
+    cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec);
+
+    // Decrypt
+    return cipher.doFinal(encryptedMessage);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import javax.crypto.Cipher;
 import javax.crypto.spec.OAEPParameterSpec;
 import javax.crypto.spec.PSource;
 import java.security.spec.MGF1ParameterSpec;
