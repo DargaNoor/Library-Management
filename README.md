@@ -1,3 +1,146 @@
+Sr. No
+
+Initiative
+
+3
+
+4
+
+1
+
+DFG Payload Inhound logging in DB
+
+2
+
+DPG Payload outbound logging in DB
+
+Toggling of DPG Audit, DPG Payload based on insert selector
+
+Multiple Timeout
+
+In case any failure at DPG end we are unable to monitor and view the problem.
+
+Currently we capture only request and response time at SYS layer but not at DPG level, so it will be captured as well
+
+In case any failure at DPG end we are unable to monitor and view the problem. It is not possible to view exact dara send to end system it can be captured as well.
+
+DPG Audit, DPG Payload can be toggled to be logged or not to save DB space for enquiry txn.
+
+Open
+
+Change Description
+
+Current Status
+
+Remarks
+
+Target Closure
+
+Currently we capture only DPG req and Resp time in DB
+
+Done
+
+Open
+
+30-04-2025
+
+UAT Finished, PROD in Progress
+
+Done
+
+Open
+
+31-05-2025
+
+Completed in UAT and NESL Done remaining Pending for Prod
+
+Under UAT, PROD in Progress Depended on Point 1
+
+31-05-2025
+
+Multiple Timeout based on channel
+
+Open
+
+Changes Done need to be promted in UAT
+
+10-04-2025
+
+CBS identifier for Bancs APIs
+
+EIS to generate CBS identifier the TXN with RRN sent by channel. and send the identifier to the CBS at end of string will help in corelating
+
+Open
+
+Changes in Progress
+
+30-04-2025
+
+New Error will be shown in response as difference between DPG and EXP Timeout is more than the set threshold limit, configured in cache
+
+6
+
+Check for Tumeout between DPG and EXP
+
+Open
+
+Deployed in CUSTOMER EXP, and will be deployed in remaining servers later post confirmation
+
+01-05-2025
+
+7
+
+DPGMQ
+
+Sending SMS from DPG to MQ Server
+
+Open
+
+POC in Progress. FAR in progress
+
+31-05-2025
+
+IMPS Beneficiary Name Lookup
+
+Beneficiary Name Lookup for Inward NEFT/RTGS
+
+Clased
+
+Prod Promoted
+
+NA
+
+IMPS outward Process flow
+
+Beneficiary Name Lookup for Inward NEFT/RTGS
+
+Closed
+
+Prod Promoted
+
+NA
+
+Revert
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
