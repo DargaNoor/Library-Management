@@ -1,3 +1,36 @@
+import java.security.SecureRandom;
+
+public class RandomStringGenerator {
+    private static final String ALPHABETS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    private static final SecureRandom random = new SecureRandom();
+
+    public static String generateRandomString(int length) {
+        StringBuilder sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++) {
+            int index = random.nextInt(ALPHABETS.length());
+            sb.append(ALPHABETS.charAt(index));
+        }
+        return sb.toString();
+    }
+
+    public static void main(String[] args) {
+        String randomStr = generateRandomString(31);
+        System.out.println("Random String: " + randomStr);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 Sr. No
 
 Initiative
