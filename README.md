@@ -1,3 +1,102 @@
+Bash Loop to Search for Sysout Logs:
+bash
+Copy code
+for dir in /var/mqsi/components/*; do
+  if [ -f "$dir/stdout.log" ]; then
+    echo "Checking logs for: $(basename "$dir")"
+    grep "System.out" "$dir/stdout.log"
+  fi
+done
+🔎 Or to find specific keyword (e.g., 'curl' or custom message):
+bash
+Copy code
+for dir in /var/mqsi/components/*; do
+  if [ -f "$dir/stdout.log" ]; then
+    echo "---- Logs from: $(basename "$dir") ----"
+    grep "curl" "$dir/stdout.log"
+  fi
+done
+🧪 If running ACE from toolkit workspace:
+Change the path accordingly:
+
+bash
+Copy code
+for dir in ~/IBM/ACE11/workspace/logs/*; do
+  if [ -f "$dir/stdout.log" ]; then
+    echo "Checking logs for: $(basename "$dir")"
+    grep "curl" "$dir/stdout.log"
+  fi
+done
+🪵 Optional: Tail logs in real time:
+bash
+Copy code
+tail -f /var/mqsi/components/*/stdout.log
+This will stream all stdout.log outputs from running servers.
+
+Let me know if your ACE is on OpenShift or containerized — the log strategy will differ slightly (oc logs or kubectl logs).
+
+
+
+
+
+
+
+You said:
+No like a variable payment_s_i loop on for around 1-10
+
+
+ChatGPT said:
+Ah, got it! You're asking for a for loop in Linux (bash shell) that loops over a range of integration server names like payment_s_1 to payment_s_10, and searches for System.out.println() (or any specific text) in their stdout.log files.
+
+✅ Sample Shell Script (bash) for payment_s_1 to payment_s_10:
+bash
+Copy code
+for i in {1..10}; do
+  is_name="payment_s_$i"
+  log_path="/var/mqsi/components/$is_name/stdout.log"
+
+  if [ -f "$log_path" ]; then
+    echo "---- Logs for $is_name ----"
+    grep "System.out" "$log_path" || echo "No matching lines found."
+  else
+    echo "Log file not found for $is_name"
+  fi
+done
+🛠️ Customize search term (e.g., "curl", "token", etc.):
+Change grep "System.out" to whatever you're printing in your JavaCompute, for example:
+
+bash
+Copy code
+grep "curl" "$log_path"
+🧪 Optional Real-Time Tail for All:
+bash
+Copy code
+for i in {1..10}; do
+  is_name="payment_s_$i"
+  log_path="/var/mqsi/components/$is_name/stdout.log"
+  [ -f "$log_path" ] && tail -n 5 "$log_path"
+done
+Let me know if your integration servers are in a different path (like ACE Toolkit workspace or container-based), and I’ll adjust the script.
+
+
+
+
+
+
+
+
+
+
+
+Tools
+
+
+
+ChatGPT can make mistakes. Check important info. See Cookie Preferences.
+
+
+
+
 import java.security.SecureRandom;
 
 public class RandomStringGenerator {
