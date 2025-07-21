@@ -1,3 +1,54 @@
+import java.util.*;
+
+public class JsonTransposePureJava {
+    public static void main(String[] args) {
+        // Simulating the parsed JSON structure using nested Maps
+        Map<String, Map<String, String>> input = new HashMap<>();
+
+        Map<String, String> a = Map.of("x", "d1", "y", "d2", "z", "d3");
+        Map<String, String> b = Map.of("x", "e1", "y", "e2", "z", "e3");
+        Map<String, String> c = Map.of("x", "f1", "y", "f2", "z", "f3");
+
+        input.put("a", a);
+        input.put("b", b);
+        input.put("c", c);
+
+        // Get all keys from the first entry (assumes all inner maps have same keys)
+        Set<String> innerKeys = input.values().iterator().next().keySet();
+
+        // Prepare the result
+        List<List<String>> result = new ArrayList<>();
+
+        for (String innerKey : innerKeys) {
+            List<String> row = new ArrayList<>();
+            for (String outerKey : input.keySet()) {
+                Map<String, String> innerMap = input.get(outerKey);
+                row.add(innerMap.get(innerKey));
+            }
+            result.add(row);
+        }
+
+        // Print the result
+        for (List<String> row : result) {
+            System.out.println(row);
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
