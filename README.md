@@ -1,5 +1,95 @@
 import java.util.*;
 
+public class Main {
+    public static void main(String[] args) {
+        // Example JSON string input
+        String jsonString = "{\"a\":{\"0\":\"d1\",\"1\":\"d2\",\"2\":\"d3\"},\"b\":{\"0\":\"e1\",\"1\":\"e2\",\"2\":\"e3\"},\"c\":{\"0\":\"f1\",\"1\":\"f2\",\"2\":\"f3\"}}";
+
+        // Call the function to get the parallel elements
+        List<List<String>> result = getParallelElements(jsonString);
+
+        // Print the result
+        for (List<String> innerList : result) {
+            System.out.println(innerList);
+        }
+    }
+
+    public static List<List<String>> getParallelElements(String jsonString) {
+        // Manually parse the JSON string
+        Map<String, Map<String, String>> jsonData = manualJsonParse(jsonString);
+
+        // Find the maximum length of the inner JSON objects
+        int maxLength = 0;
+        for (Map<String, String> innerObject : jsonData.values()) {
+            maxLength = Math.max(maxLength, innerObject.size());
+        }
+
+        // Initialize the result list
+        List<List<String>> result = new ArrayList<>();
+        for (int i = 0; i < maxLength; i++) {
+            result.add(new ArrayList<>());
+        }
+
+        // Populate the result list with parallel elements
+        for (Map<String, String> innerObject : jsonData.values()) {
+            for (int i = 0; i < maxLength; i++) {
+                String value = innerObject.get(String.valueOf(i));
+                if (value != null) {
+                    result.get(i).add(value);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public static Map<String, Map<String, String>> manualJsonParse(String jsonString) {
+        // Simple manual JSON parser for the given format
+        jsonString = jsonString.trim().substring(1, jsonString.length() - 1); // Remove outer {}
+        String[] parts = jsonString.split("\\},\\\"");
+        Map<String, Map<String, String>> result = new HashMap<>();
+
+        for (String part : parts) {
+            part = part.replaceAll("\\\"", "").replaceAll("\\{", "").replaceAll("\\}", "");
+            String[] keyValuePairs = part.split(",");
+            String key = keyValuePairs[0].split("\\:")[0];
+            Map<String, String> innerMap = new HashMap<>();
+
+            for (int i = 1; i < keyValuePairs.length; i++) {
+                String[] pair = keyValuePairs[i].split("\\:");
+                if (pair.length == 2) {
+                    innerMap.put(pair[0], pair[1]);
+                }
+            }
+
+            result.put(key, innerMap);
+        }
+
+        return result;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import java.util.*;
+
 public class JsonTransposePureJava {
     public static void main(String[] args) {
         // Simulating the parsed JSON structure using nested Maps
