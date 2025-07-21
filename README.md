@@ -1,3 +1,19 @@
+"purseInfoList": {
+        "purseInfo": {
+            "purseId": ["TRAVEL","TRAVEL","TRAVEL","TRAVEL","TRAVEL","TRAVEL","TRAVEL"]
+            "purseCurrency": ["AED","CAD","AUD","EUR","USD","GBP","SGD"]
+            "purseAvailableBalance": ["0.00","0.00","0.00","0.00","0.00","0.00","0.00"]
+            "purseCurrentBalance": ["0.00","0.00","0.00","0.00","0.00","0.00","0.00"]
+            "purseStatus": ["A","A","A","A","A","A","A",]
+        },
+    }
+
+
+
+{"purseInfo": {"purseId": "TRAVEL","purseCurrency": "AED","purseAvailableBalance": "0.00","purseCurrentBalance": "0.00","purseStatus": "A"},"purseInfo": {"purseId": "TRAVEL","purseCurrency": "CAD","purseAvailableBalance": "0.00","purseCurrentBalance": "0.00","purseStatus": "A"},"purseInfo": {"purseId": "TRAVEL","purseCurrency": "AUD","purseAvailableBalance": "0.00","purseCurrentBalance": "0.00","purseStatus": "A"},"purseInfo": {"purseId": "TRAVEL","purseCurrency": "EUR","purseAvailableBalance": "0.00","purseCurrentBalance": "0.00","purseStatus": "A"},"purseInfo": {"purseId": "TRAVEL","purseCurrency": "USD","purseAvailableBalance": "0.00","purseCurrentBalance": "0.00","purseStatus": "A"},"purseInfo": {"purseId": "TRAVEL","purseCurrency": "GBP","purseAvailableBalance": "0.00","purseCurrentBalance": "0.00","purseStatus": "A"},"purseInfo": {"purseId": "TRAVEL","purseCurrency": "SGD","purseAvailableBalance": "0.00","purseCurrentBalance": "0.00","purseStatus": "A"}}
+
+
+
 import java.util.*;
 
 public class Main {
