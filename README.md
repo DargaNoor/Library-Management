@@ -1,4 +1,67 @@
-"purseInfoList": {
+public class Main {
+    public static void main(String[] args) {
+        String jsonString = "{\"purseInfoList\":{\"purseInfo\":[{\"purseId\":\"TRAVEL\",\"purseCurrency\":\"AED\",\"purseAvailableBalance\":\"0.00\",\"purseCurrentBalance\":\"0.00\",\"purseStatus\":\"A\"},{\"purseId\":\"TRAVEL\",\"purseCurrency\":\"CAD\",\"purseAvailableBalance\":\"0.00\",\"purseCurrentBalance\":\"0.00\",\"purseStatus\":\"A\"},{\"purseId\":\"TRAVEL\",\"purseCurrency\":\"AUD\",\"purseAvailableBalance\":\"0.00\",\"purseCurrentBalance\":\"0.00\",\"purseStatus\":\"A\"},{\"purseId\":\"TRAVEL\",\"purseCurrency\":\"EUR\",\"purseAvailableBalance\":\"0.00\",\"purseCurrentBalance\":\"0.00\",\"purseStatus\":\"A\"},{\"purseId\":\"TRAVEL\",\"purseCurrency\":\"USD\",\"purseAvailableBalance\":\"0.00\",\"purseCurrentBalance\":\"0.00\",\"purseStatus\":\"A\"},{\"purseId\":\"TRAVEL\",\"purseCurrency\":\"GBP\",\"purseAvailableBalance\":\"0.00\",\"purseCurrentBalance\":\"0.00\",\"purseStatus\":\"A\"},{\"purseId\":\"TRAVEL\",\"purseCurrency\":\"SGD\",\"purseAvailableBalance\":\"0.00\",\"purseCurrentBalance\":\"0.00\",\"purseStatus\":\"A\"}]}}";
+
+        // Manually parse the JSON string
+        String purseInfoListJson = getJsonValue(jsonString, "purseInfoList");
+        String purseInfoJsonArray = getJsonValue(purseInfoListJson, "purseInfo");
+
+        // Extract the purseInfo array
+        String[] purseInfoArray = splitJsonArray(purseInfoJsonArray);
+
+        // Initialize the output arrays
+        String[] purseId = new String[purseInfoArray.length];
+        String[] purseCurrency = new String[purseInfoArray.length];
+        String[] purseAvailableBalance = new String[purseInfoArray.length];
+        String[] purseCurrentBalance = new String[purseInfoArray.length];
+        String[] purseStatus = new String[purseInfoArray.length];
+
+        // Populate the output arrays
+        for (int i = 0; i < purseInfoArray.length; i++) {
+            purseId[i] = getJsonValue(purseInfoArray[i], "purseId");
+            purseCurrency[i] = getJsonValue(purseInfoArray[i], "purseCurrency");
+            purseAvailableBalance[i] = getJsonValue(purseInfoArray[i], "purseAvailableBalance");
+            purseCurrentBalance[i] = getJsonValue(purseInfoArray[i], "purseCurrentBalance");
+            purseStatus[i] = getJsonValue(purseInfoArray[i], "purseStatus");
+        }
+
+        // Construct the expected output JSON string
+        String expectedOutput = "{\"purseInfoList\":{\"purseInfo\":{\"purseId\":[\"" + String.join("\",\"", purseId) + "\"],\"purseCurrency\":[\"" + String.join("\",\"", purseCurrency) + "\"],\"purseAvailableBalance\":[\"" + String.join("\",\"", purseAvailableBalance) + "\"],\"purseCurrentBalance\":[\"" + String.join("\",\"", purseCurrentBalance) + "\"],\"purseStatus\":[\"" + String.join("\",\"", purseStatus) + "\"]}}}";
+
+        System.out.println(expectedOutput);
+    }
+
+    // Helper method to get a JSON value
+    public static String getJsonValue(String json, String key) {
+        int startIndex = json.indexOf("\"" + key + "\":");
+        if (startIndex == -1) return null;
+        startIndex += key.length() + 2;
+        int endIndex = json.indexOf(",", startIndex);
+        if (endIndex == -1) endIndex = json.indexOf("}", startIndex);
+        if (endIndex == -1) endIndex = json.length();
+        String value = json.substring(startIndex, endIndex).trim();
+        if (value.startsWith("\"")) value = value.substring(1, value.length() - 1);
+        return value;
+    }
+
+                                          
+    public static String[] splitJsonArray(String jsonArray) {
+        jsonArray = jsonArray.substring(1, jsonArray.length() - 1);                   
+        String[] elements = jsonArray.split("// Helper method to split a JSON array
+    public static String[] splitJsonArray(String jsonArray) {
+        jsonArray = jsonArray.substring(1, jsonArray.length() - 1); // Remove outer []
+        String[] elements = jsonArray.split("\\},\\{");
+        for (int i = 0; i < elements.length; i++) {
+            if (i == 0 && !elements[i].startsWith("{")) elements[i] = "{" + elements[i];
+            if (i == elements.length - 1 && !elements[i].endsWith("
+            
+            
+            
+            
+            
+            
+            
+            "purseInfoList": {
         "purseInfo": {
             "purseId": ["TRAVEL","TRAVEL","TRAVEL","TRAVEL","TRAVEL","TRAVEL","TRAVEL"]
             "purseCurrency": ["AED","CAD","AUD","EUR","USD","GBP","SGD"]
