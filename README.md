@@ -1,3 +1,43 @@
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.*;
+
+public class TransposeNamedJson {
+    public static void main(String[] args) {
+        String jsonString = """
+        {
+          "a": {"x": "d1", "y": "d2", "z": "d3"},
+          "b": {"x": "e1", "y": "e2", "z": "e3"},
+          "c": {"x": "f1", "y": "f2", "z": "f3"}
+        }
+        """;
+
+        JSONObject input = new JSONObject(jsonString);
+
+        // Get all outer keys: a, b, c
+        List<String> outerKeys = new ArrayList<>(input.keySet());
+
+        // Collect all unique inner keys: x, y, z
+        Set<String> innerKeySet = input.getJSONObject(outerKeys.get(0)).keySet();
+
+        JSONArray result = new JSONArray();
+
+        for (String innerKey : innerKeySet) {
+            JSONArray row = new JSONArray();
+            for (String outerKey : outerKeys) {
+                JSONObject innerObject = input.getJSONObject(outerKey);
+                row.put(innerObject.getString(innerKey));
+            }
+            result.put(row);
+        }
+
+        System.out.println(result.toString(2));
+    }
+}
+
+
+
 
 # Library-Management
 Library Management System is a system which maintains the information about the books present in the library, their authors, the members of library to whom books are 
