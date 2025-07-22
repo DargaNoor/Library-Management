@@ -1,5 +1,91 @@
 public class Main {
     public static void main(String[] args) {
+        // Example string representing the data array in JSON format
+        String dataString = "[{\"seqNo\":\"SEQN0001\",\"DataType\":\"UID\",\"Data\":\"507339736890\",\"DataHashFormat\":\"U\"},{\"seqNo\":\"SEQN0002\",\"DataType\":\"RefKey\",\"Data\":\"2819pVxvXhII\",\"DataHashFormat\":\"I\"}]";
+
+        // Manually parse the JSON array
+        dataString = dataString.trim();
+        if (dataString.startsWith("[") && dataString.endsWith("]")) {
+            dataString = dataString.substring(1, dataString.length() - 1);
+            String[] elements = splitJsonArray(dataString);
+            for (String element : elements) {
+                String dataValue = manualGetJsonValue(element, "Data");
+                if (dataValue != null) {
+                    String maskedData = maskData(dataValue);
+                    System.out.println("Data tag name with masked value: " + maskedData);
+                }
+            }
+        }
+    }
+
+    private static String[] splitJsonArray(String jsonArray) {
+        // Simple manual splitter for JSON array elements
+        jsonArray = jsonArray.trim();
+        if (jsonArray.isEmpty()) {
+            return new String[0];
+        }
+        String[] elements = jsonArray.split("\\},\\{");
+        for (int i = 0; i < elements.length; i++) {
+            if (!elements[i].startsWith("{")) {
+                elements[i] = "{" + elements[i];
+            }
+            if (!elements[i].endsWith("}")) {
+                elements[i] = elements[i] + "}";
+            }
+        }
+        return elements;
+    }
+
+    private static String manualGetJsonValue(String json, String key) {
+        // Manual JSON value extractor
+        int index = json.indexOf("\"" + key + "\":\"");
+        if (index == -1) {
+            return null;                 
+        }
+        index += key.length() + 3;                             
+        int endIndex = json.indexOf("// Key not found
+        }
+        index += key.length() + 3; // Move past the key and ":"
+        int endIndex = json.indexOf("\"", index);
+        if (endIndex == -1) {
+            return null; // End quote not found
+        }
+        return json.substring(index, endIndex);
+    }
+
+    private static String maskData(String data) {
+        if (data.length() > 9) {
+            return "*********" + data.substring(9);
+        } else if (data.length() == 9) {
+            return "*********";
+        } else {
+            // For data shorter than 9 characters, mask all
+            return "*".repeat(data.length());
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+lllllllllllll
+
+
+
+
+
+
+
+
+
+
+public class Main {
+    public static void main(String[] args) {
         String jsonString = "{\"purseInfoList\":{\"purseInfo\":[{\"purseId\":\"TRAVEL\",\"purseCurrency\":\"AED\",\"purseAvailableBalance\":\"0.00\",\"purseCurrentBalance\":\"0.00\",\"purseStatus\":\"A\"},{\"purseId\":\"TRAVEL\",\"purseCurrency\":\"CAD\",\"purseAvailableBalance\":\"0.00\",\"purseCurrentBalance\":\"0.00\",\"purseStatus\":\"A\"},{\"purseId\":\"TRAVEL\",\"purseCurrency\":\"AUD\",\"purseAvailableBalance\":\"0.00\",\"purseCurrentBalance\":\"0.00\",\"purseStatus\":\"A\"},{\"purseId\":\"TRAVEL\",\"purseCurrency\":\"EUR\",\"purseAvailableBalance\":\"0.00\",\"purseCurrentBalance\":\"0.00\",\"purseStatus\":\"A\"},{\"purseId\":\"TRAVEL\",\"purseCurrency\":\"USD\",\"purseAvailableBalance\":\"0.00\",\"purseCurrentBalance\":\"0.00\",\"purseStatus\":\"A\"},{\"purseId\":\"TRAVEL\",\"purseCurrency\":\"GBP\",\"purseAvailableBalance\":\"0.00\",\"purseCurrentBalance\":\"0.00\",\"purseStatus\":\"A\"},{\"purseId\":\"TRAVEL\",\"purseCurrency\":\"SGD\",\"purseAvailableBalance\":\"0.00\",\"purseCurrentBalance\":\"0.00\",\"purseStatus\":\"A\"}]}}";
 
         // Manually extract the "purseInfo" array block
