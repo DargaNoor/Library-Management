@@ -1,3 +1,27 @@
+private static String manualGetJsonValue(String json, String key) {
+    int startIndex = json.indexOf("\"" + key + "\"");
+    if (startIndex == -1) return null;
+    startIndex = json.indexOf(":", startIndex) + 1;
+    while (startIndex < json.length() && json.charAt(startIndex) == ' ') startIndex++;
+    if (startIndex >= json.length()) return null;
+    int endIndex = startIndex;
+    if (json.charAt(startIndex) == '"') {
+        startIndex++;
+        endIndex = json.indexOf("\"", startIndex);
+    } else {
+        endIndex = json.indexOf(",", startIndex);
+        if (endIndex == -1) endIndex = json.indexOf("}", startIndex);
+    }
+    if (endIndex == -1) endIndex = json.length();
+    return json.substring(startIndex, endIndex);
+}
+
+
+
+
+
+
+
 public class Main {
     public static void main(String[] args) {
         // Example string representing the data array in JSON format
