@@ -1,3 +1,92 @@
+public class Main {
+    public static void main(String[] args) {
+        String dataString = "[{\"seqNo\":\"SEQN0001\",\"DataType\":\"UID\",\"Data\":\"507339736890\",\"DataHashFormat\":\"U\"},{\"seqNo\":\"SEQN0002\",\"DataType\":\"RefKey\",\"Data\":\"2819pVxvXhII\",\"DataHashFormat\":\"I\"}]";
+
+        dataString = dataString.trim();
+        if (dataString.startsWith("[") && dataString.endsWith("]")) {
+            dataString = dataString.substring(1, dataString.length() - 1);
+            String[] elements = splitJsonArray(dataString);
+            StringBuilder output = new StringBuilder("[");
+            for (int i = 0; i < elements.length; i++) {
+                String element = elements[i];
+                int dataIndex = element.indexOf("\"Data\":\"");
+                if (dataIndex != -1) {
+                    int dataValueStart = dataIndex + "\"Data\":".length() + 1;
+                    int dataValueEnd = element.indexOf("\"", dataValueStart);
+                    if (dataValueEnd != -1) {
+                        String dataValue = element.substring(dataValueStart, dataValueEnd);
+                        String maskedData = maskData(dataValue);
+                        String modifiedElement = element.replace("\"Data\":\"" + dataValue + "\"", "\"Data\":\"" + maskedData + "\"");
+                        output.append(modifiedElement);
+                    } else {
+                        output.append(element); // In case of unexpected format, output original
+                    }
+                } else {
+                    output.append(element); // If no "Data" field, output original
+                }
+                if (i < elements.length - 1) {
+                    output.append(",");
+                }
+            }
+            output.append("]");
+            System.out.println("Output: " + output.toString());
+        }
+    }
+
+    private static String[] splitJsonArray(String jsonArray) {
+        jsonArray = jsonArray.trim();
+        if (jsonArray.isEmpty()) {
+            return new String[0];
+        }
+        String[] elements = jsonArray.split("\\},\\{");
+        for (int i = 0; i < elements.length; i++) {
+            if (!elements[i].startsWith("{")) {
+                elements[i] = "{" + elements[i];
+            }
+            if (!elements[i].endsWith("}")) {
+                elements[i] = elements[i] + "}";
+            }
+        }
+        return elements;
+    }
+
+    private static String maskData(String data) {
+        if (data.length() > 9) {
+            return "*********" + data.substring(9);
+        } else if (data.length() == 9) {
+            return "*********";
+        } else {
+            return "*".repeat(data.length());
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 private static String manualGetJsonValue(String json, String key) {
     int startIndex = json.indexOf("\"" + key + "\"");
     if (startIndex == -1) return null;
