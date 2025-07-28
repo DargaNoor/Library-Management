@@ -1,3 +1,35 @@
+CREATE COMPUTE MODULE PadStringToLength
+CREATE FUNCTION Main() RETURNS BOOLEAN
+BEGIN
+    DECLARE originalString CHARACTER 'HELLO ACE'; -- Your input string
+    DECLARE targetLength INTEGER 1000;            -- Desired total length
+    DECLARE currentLength INTEGER LENGTH(originalString);
+    DECLARE spacesToAdd INTEGER targetLength - currentLength;
+    DECLARE paddedString CHARACTER '';
+
+    -- Add spaces only if needed
+    IF spacesToAdd > 0 THEN
+        SET paddedString = originalString || SPACE(spacesToAdd);
+    ELSE
+        -- If original string is already >= target length, trim it
+        SET paddedString = SUBSTRING(originalString FROM 1 FOR targetLength);
+    END IF;
+
+    -- Output padded string to Environment for demo
+    SET Environment.Variables.PaddedString = paddedString;
+    RETURN TRUE;
+END;
+END MODULE;
+
+
+
+
+
+
+
+
+
+
 public class Main {
     public static void main(String[] args) {
         String dataString = "[{\"seqNo\":\"SEQN0001\",\"DataType\":\"UID\",\"Data\":\"507339736890\",\"DataHashFormat\":\"U\"},{\"seqNo\":\"SEQN0002\",\"DataType\":\"RefKey\",\"Data\":\"2819pVxvXhII\",\"DataHashFormat\":\"I\"}]";
