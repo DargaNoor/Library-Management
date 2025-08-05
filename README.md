@@ -1,4 +1,65 @@
-CREATE COMPUTE MODULE PadStringToLength
+assembly:
+  execute:
+    - invoke:
+        title: Validate Headers
+        version: 1.0.0
+        verb: get
+        target-url: 'https://mockbackend/validate'
+        timeout: 5000
+
+    - gatewayscript:
+        title: Extract AccessToken Header
+        source: |
+          var token = apim.getvariable('request.headers.accessToken');
+          apim.setvariable('context.encryptedToken', token);
+
+    - xslt:
+        title: Decrypt AccessToken using XSLT
+        version: 1.0.0
+        source: |
+          <?xml version="1.0" encoding="UTF-8"?>
+          <xsl:stylesheet version="1.0"
+              xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+              xmlns:dp="http://www.datapower.com/extensions"
+              extension-element-prefixes="dp">
+
+              <xsl:template match="/">
+                  <xsl:variable name="encToken" select="dp:variable('context/encryptedToken')"/>
+                  <xsl:variable name="decrypted" select="dp:decrypt($encToken, 'rsa', 'EISPRIVATE')"/>
+                  <dp:set-variable name="'context/AccessToken'" value="$decrypted"/>
+              </xsl:template>
+          </xsl:stylesheet>
+
+    - gatewayscript:
+        title: Validate Body and Token
+        source: |
+          var token = apim.getvariable('context.AccessToken');
+          var body = apim.getvariable('request.body');
+          if (!token || !body || body.length === 0) {
+            apim.setvariable('message.status.code', 400);
+            apim.setvariable('message.body', { error: "Missing or invalid accessToken/body" });
+            apim.stop();
+          }
+
+    - invoke:
+        title: Proceed to Backend
+        verb: post
+        target-url: 'https://backend/api/secure'
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        CREATE COMPUTE MODULE PadStringToLength
 CREATE FUNCTION Main() RETURNS BOOLEAN
 BEGIN
     DECLARE originalString CHARACTER 'HELLO ACE'; -- Your input string
