@@ -1,4 +1,56 @@
-assembly:
+- validate:
+    title: validate-all-body-fields
+    version: 2.7.0
+    validate-against: body-param
+    validate:
+      - location: body
+        name: RRN
+        required: true
+      - location: body
+        name: DIGI_SIGN
+        required: true
+      - location: header
+        name: access_token
+        required: true
+  catch:
+    - gateway-script:
+        title: handle-validate-errors
+        source: |
+          var apimError = apim.getvariable('apim.error');
+          var detail = apimError && apimError.error && apimError.error.detail || '';
+          var message = "Validation failed";
+          var code = "invalid_request";
+
+          if (detail.indexOf("RRN") !== -1) {
+              message = "RRN is missing in request body";
+              code = "missing_rrn";
+          } else if (detail.indexOf("DIGI_SIGN") !== -1) {
+              message = "DIGI_SIGN is missing in request body";
+              code = "missing_digisign";
+          } else if (detail.indexOf("access_token") !== -1) {
+              message = "Access token header is missing";
+              code = "missing_access_token";
+          }
+
+          response.statusCode = 400;
+          response.headers['Content-Type'] = 'application/json';
+          response.body = JSON.stringify({
+              error: code,
+              message: message
+          });
+          session.output.write(response);
+
+
+
+
+
+
+
+
+
+
+
+      assembly:
   execute:
     - invoke:
         title: Validate Headers
