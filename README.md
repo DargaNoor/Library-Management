@@ -1,4 +1,18 @@
-- switch:
+- gateway-script:
+    title: Validate AccessToken Header
+    source: |
+      var accessToken = apim.getvariable('request.headers.AccessToken');
+      if (!accessToken) {
+        throw {
+          status: 400,
+          message: 'Missing AccessToken in request headers'
+        };
+      }
+
+
+
+
+  - switch:
     title: Decide Which XSL
     case:
       - condition: some_condition_here
