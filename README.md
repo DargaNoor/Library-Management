@@ -1,4 +1,32 @@
-- validate:
+- switch:
+    title: Decide Which XSL
+    case:
+      - condition: some_condition_here
+        execute:
+          - xslt:
+              location: local:///xsl/route_for_accounts.xsl
+      - condition: another_condition
+        execute:
+          - xslt:
+              location: local:///xsl/route_for_cards.xsl
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  - validate:
     title: validate-all-body-fields
     version: 2.7.0
     validate-against: body-param
