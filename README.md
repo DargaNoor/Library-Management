@@ -1,3 +1,20 @@
+<xsd:element name="NOMINEE_DETALIS" dfdl:occursCountKind="expression"
+             maxOccurs="9"
+             dfdl:occursCount="{ xs:int(NUMBER_OF_NOMINEES) }">
+    <xsd:complexType>
+        <xsd:sequence>
+            <!-- Nominee fields -->
+            <xsd:element name="SEQUENCE" dfdl:length="1" type="xsd:string"/>
+            <!-- ... rest of your nominee fields ... -->
+            <xsd:element name="GAURDIANS_ADDRESS_2" dfdl:length="40" type="xsd:string"/>
+            
+            <!-- Conditional filler: only if this is the 3rd nominee -->
+            <xsd:element name="FILLER" dfdl:length="1491" type="xsd:string"
+                         dfdl:inputValueCalc='{ if (../SEQUENCE = "3") then "" else fn:error() }'
+                         minOccurs="0"/>
+        </xsd:sequence>
+    </xsd:complexType>
+</xsd:element>
 
 vv
 
