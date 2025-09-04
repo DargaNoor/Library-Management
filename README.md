@@ -1,3 +1,91 @@
+using System;
+using System.Text;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.Crypto.Engines;
+using Org.BouncyCastle.Crypto.Modes;
+using Org.BouncyCastle.Crypto.Parameters;
+
+public class AESGCMEncryption
+{
+    // Encrypt message using AES-GCM
+    public static string AESEncrypt_GCM(string message, string key)
+    {
+        byte[] keyBytes = Encoding.UTF8.GetBytes(key);
+        if (keyBytes.Length != 16 && keyBytes.Length != 24 && keyBytes.Length != 32)
+            throw new ArgumentException("Key must be 16, 24, or 32 bytes.");
+
+        // Generate random 12-byte IV
+        byte[] iv = new byte[12];
+        new Random().NextBytes(iv);
+
+        byte[] plaintextBytes = Encoding.UTF8.GetBytes(message);
+
+        GcmBlockCipher cipher = new GcmBlockCipher(new AesEngine());
+        AeadParameters parameters = new AeadParameters(new KeyParameter(keyBytes), 128, iv, null);
+        cipher.Init(true, parameters);
+
+        byte[] ciphertextBytes = new byte[cipher.GetOutputSize(plaintextBytes.Length)];
+        int len = cipher.ProcessBytes(plaintextBytes, 0, plaintextBytes.Length, ciphertextBytes, 0);
+        cipher.DoFinal(ciphertextBytes, len);
+
+        // Combine IV + ciphertext
+        byte[] finalBytes = new byte[iv.Length + ciphertextBytes.Length];
+        Array.Copy(iv, 0, finalBytes, 0, iv.Length);
+        Array.Copy(ciphertextBytes, 0, finalBytes, iv.Length, ciphertextBytes.Length);
+
+        return Convert.ToBase64String(finalBytes);
+    }
+
+    // Decrypt AES-GCM message
+    public static string AESDecrypt_GCM(string base64Ciphertext, string key)
+    {
+        byte[] keyBytes = Encoding.UTF8.GetBytes(key);
+        if (keyBytes.Length != 16 && keyBytes.Length != 24 && keyBytes.Length != 32)
+            throw new ArgumentException("Key must be 16, 24, or 32 bytes.");
+
+        byte[] inputBytes = Convert.FromBase64String(base64Ciphertext);
+
+        // Extract IV (12 bytes)
+        byte[] iv = new byte[12];
+        Array.Copy(inputBytes, 0, iv, 0, iv.Length);
+
+        // Extract ciphertext+tag
+        byte[] ciphertextBytes = new byte[inputBytes.Length - iv.Length];
+        Array.Copy(inputBytes, iv.Length, ciphertextBytes, 0, ciphertextBytes.Length);
+
+        GcmBlockCipher cipher = new GcmBlockCipher(new AesEngine());
+        AeadParameters parameters = new AeadParameters(new KeyParameter(keyBytes), 128, iv, null);
+        cipher.Init(false, parameters);
+
+        byte[] plainBytes = new byte[cipher.GetOutputSize(ciphertextBytes.Length)];
+        int len = cipher.ProcessBytes(ciphertextBytes, 0, ciphertextBytes.Length, plainBytes, 0);
+        cipher.DoFinal(plainBytes, len);
+
+        return Encoding.UTF8.GetString(plainBytes).TrimEnd('\0');
+    }
+
+    // Demo
+    public static void Main()
+    {
+        string key = "12345678901234567890123456789012"; // 32-byte key
+        string message = "Hello AES-GCM from C#!";
+
+        string encrypted = AESEncrypt_GCM(message, key);
+        Console.WriteLine("Encrypted: " + encrypted);
+
+        string decrypted = AESDecrypt_GCM(encrypted, key);
+        Console.WriteLine("Decrypted: " + decrypted);
+    }
+}
+
+
+
+
+
+
+
+
+
 <xsd:element name="NOMINEE_DETALIS" dfdl:occursCountKind="expression"
              maxOccurs="9"
              dfdl:occursCount="{ xs:int(NUMBER_OF_NOMINEES) }">
