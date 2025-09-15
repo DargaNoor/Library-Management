@@ -1,3 +1,78 @@
+***BROKER CREATION**
+
+7 mqsicreatebroker JANSURAKSHA SYS -q QM JANSURAKSHA SYS
+
+mqsicreateexecutiongroup JANSURAKSHA SYS JANSURAKSHA_SYS_S_01
+
+mqsireportproperties JANSURAKSHA SYS -JANSURAKSHA SYS S 01-o ComIbmCacheManager -
+
+mqsichangeproperties JANSURAKSHA SYS -JANSURAKSHA SYS S 01 -JSON -n disableSchemaLookupExceptionWhen v notSpecified
+
+mqsichangeproperties JANSURAKSHA SYS -JANSURAKSHA_SYS_S_01 -GlobalCache -n cacheon v true
+
+2 mqsichangeproperties JANSURAKSHA SYS -JANSURAKSHA SYS S 01 -GlobalCache -n catalogClusterEndPoints
+
+-v \"HEART BEAT_localhost_2840:localhost:2843:2841, HEART BEAT localhost 2844:localhost:2847:2845, CACHE localhost 3120:localhost:3123:3121\"
+
+mqsichangeproperties JANSURAKSHA SYS - JANSURAKSHA_SYS_S_01 -GlobalCache -n catalog DomainName -v
+
+3 localhost 2840 HEART BEAT 'WMB CACHE localhost 3120 HEART BEAT localhost 2844'
+
+4 mqsichangeproperties JANSURAKSHA SYS JANSURAKSHA SYS S 01 -GlobalCache -n catalogserviceEndPoints -v \"localhost:2840, localhost:2844, localhost:3120\"
+
+mqsichangeproperties JANSURAKSHA SYS JANSURAKSHA SYS_S_01 -GlobalCache -n listenerHost v localhost
+
+7 mqsichangeproperties JANSURAKSHA_SYS -
+
+5 6 mqsichangeproperties JANSURAKSHA SYS -JANSURAKSHA SYS_S_01 -HTTPConnector -n ConnBacklog -v 1000*
+
+8mqsichangeproperties JANSURAKSHA SYS -JANSURAKSHA SYS S 01-0 JVM -n jvmMaxHeapSize -v '100663296 JANSURAKSHA_SYS_S 01-o JVM-n jvmMinHeapSize -v 100663296'
+
+9mqsichangeproperties JANSURAKSHA SYS JANSURAKSHA SYS S 01 HTTPConnector in QueueCapacity v '1000'
+
+To Check/assign Port for Broker****
+
+1 mqsireportproperties JANSURAKSHA SYS-b httplistener -o HTTPConnector -r 2 mqsichangeproperties JANSURAKSHA SYS-b httplistener - HTTPConnector - port - 5055'
+
+3********O Check/set keystores*****
+
+4 mqsireportproperties JANSURAKSHA SYS -o BrokerRegistry -r
+
+I
+
+5 mqsichangeproperties JANSURAKSHA SYS -o BrokerRegistry -n brokerKeystoreFile -v /opt/IBM/Broker_Properties/JKS/EISBRK10 PROD NI KEYSTORE.jks
+
+6mqsichangeproperties JANSURAKSHA SYS -o BrokerRegistry n brokerTruststoreFile -v /opt/IBM/Broker_Properties/JKS/EISBRK10 PROD N1 TRUSTSTORE.jks
+
+7********Check DB Connectivity/Configure****
+
+8 mqsicvp JANSURAKSHA SYS - SI
+
+5 mqsisetdbparms JANSURAKSHA SYS U EISAPP -P EISAPP - SI
+
+10 mqsisetdbparms JANSURAKSHA SYS -n brokerKeystore::password -u NA -p password
+
+1 mqsisetdbparms JANSURAKSHA SYS -n brokerTruststore::password -u NA -p password
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 using System;
 using System.Text;
 using Org.BouncyCastle.Crypto;
