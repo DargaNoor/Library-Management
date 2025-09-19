@@ -1,3 +1,112 @@
+CREATE COMPUTE MODULE GenCorrelationIdAndSetup
+CREATE FUNCTION Main() RETURNS BOOLEAN
+BEGIN
+    -- Generate Correlation ID
+    DECLARE corrId CHAR CAST(UUIDASCHAR(UUID()) AS CHAR);
+
+    -- Store Correlation ID in LocalEnvironment for Aggregate
+    SET LocalEnvironment.Destination.AggregateControl.ReplyIdentifier = corrId;
+
+    -- Setup 3 MQ destinations
+    DECLARE idx INT 1;
+    
+    SET LocalEnvironment.Destination.MQ.DestinationData[idx].queueName = 'KYC.Q';
+    SET LocalEnvironment.Destination.MQ.DestinationData[idx].queueManagerName = 'QM1';
+    SET idx = idx + 1;
+
+    SET LocalEnvironment.Destination.MQ.DestinationData[idx].queueName = 'CREDIT.Q';
+    SET LocalEnvironment.Destination.MQ.DestinationData[idx].queueManagerName = 'QM1';
+    SET idx = idx + 1;
+
+    SET LocalEnvironment.Destination.MQ.DestinationData[idx].queueName = 'RISK.Q';
+    SET LocalEnvironment.Destination.MQ.DestinationData[idx].queueManagerName = 'QM1';
+
+    -- Optionally add metadata in message
+    SET OutputRoot = InputRoot;
+    SET OutputRoot.Properties.CorrelationIdentifier = corrId;
+
+    RETURN TRUE;
+END;
+END MODULE;
+
+
+CREATE COMPUTE MODULE MergeResults
+CREATE FUNCTION Main() RETURNS BOOLEAN
+BEGIN
+    -- Prepare JSON output
+    CREATE LASTCHILD OF OutputRoot DOMAIN('JSON');
+    SET OutputRoot.JSON.Data.AllResponses[] = '';
+
+    -- KYC Response
+    IF EXISTS(InputRoot.XMLNSC.AggReply.KYCResponse) THEN
+        SET OutputRoot.JSON.Data.KYC = InputRoot.XMLNSC.AggReply.KYCResponse;
+    END IF;
+
+    -- Credit Response
+    IF EXISTS(InputRoot.XMLNSC.AggReply.CreditResponse) THEN
+        SET OutputRoot.JSON.Data.Credit = InputRoot.XMLNSC.AggReply.CreditResponse;
+    END IF;
+
+    -- Risk Response
+    IF EXISTS(InputRoot.XMLNSC.AggReply.RiskResponse) THEN
+        SET OutputRoot.JSON.Data.Risk = InputRoot.XMLNSC.AggReply.RiskResponse;
+    END IF;
+
+    RETURN TRUE;
+END;
+END MODULE;
+
+
+CREATE COMPUTE MODULE TimeoutHandler
+CREATE FUNCTION Main() RETURNS BOOLEAN
+BEGIN
+    CREATE LASTCHILD OF OutputRoot DOMAIN('JSON');
+    SET OutputRoot.JSON.Data.Status = 'Partial Response - Timeout Occurred';
+    SET OutputRoot.JSON.Data.CorrelationId = InputRoot.Properties.CorrelationIdentifier;
+    RETURN TRUE;
+END;
+END MODULE;
+
+
+{
+  "customerId": "CUST12345",
+  "loanAmount": 250000,
+  "currency": "INR",
+  "products": ["KYC", "CREDIT", "RISK"]
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ***BROKER CREATION**
 
 7 mqsicreatebroker JANSURAKSHA SYS -q QM JANSURAKSHA SYS
