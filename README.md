@@ -1,3 +1,47 @@
+CREATE COMPUTE MODULE SetCorrelationId
+    CREATE FUNCTION Main() RETURNS BOOLEAN
+    BEGIN
+        DECLARE ts CHAR CAST(CURRENT_TIMESTAMP AS CHAR FORMAT 'yyyyMMddHHmmssSSS');
+        DECLARE rnd INT RAND() * 1000000;  -- Random 6-digit number
+        DECLARE corrId CHAR ts || '_' || CAST(rnd AS CHAR);
+        
+        -- Store correlation id in Environment
+        SET Environment.Variables.CorrelationId = corrId;
+        
+        -- Also add it to MQMD or HTTP headers for tracking
+        IF EXISTS(OutputRoot.MQMD) THEN
+            SET OutputRoot.MQMD.CorrelId = corrId;
+        ELSE
+            SET OutputRoot.Properties.CorrelationIdentifier = corrId;
+        END IF;
+        
+        RETURN TRUE;
+    END;
+END MODULE;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 CREATE COMPUTE MODULE GenCorrelationIdAndSetup
 CREATE FUNCTION Main() RETURNS BOOLEAN
 BEGIN
