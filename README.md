@@ -1,3 +1,42 @@
+DECLARE inString CHARACTER InputRoot.BLOB;  -- Or InputRoot.BLOB.BLOB depending on your flow
+DECLARE str CHARACTER CAST(inString AS CHARACTER CCSID InputProperties.CodedCharSetId);
+
+-- Extract substring starting from 136th character
+DECLARE subStr CHARACTER SUBSTRING(str FROM 136);
+
+-- Now split into tokens (amounts usually separated by space)
+DECLARE amount1 CHARACTER TRIM(SUBSTRING(subStr FROM 1 FOR 20));  -- 1st amount (dynamic size)
+DECLARE pos1 INT POSITION('.00' IN amount1) + 3; -- move after first amount
+SET amount1 = TRIM(SUBSTRING(subStr FROM 1 FOR pos1));
+
+DECLARE subStr2 CHARACTER SUBSTRING(subStr FROM pos1+1);
+DECLARE pos2 INT POSITION('.00' IN subStr2) + 3;
+DECLARE amount2 CHARACTER TRIM(SUBSTRING(subStr2 FROM 1 FOR pos2));
+
+DECLARE subStr3 CHARACTER SUBSTRING(subStr2 FROM pos2+1);
+DECLARE pos3 INT POSITION('.00' IN subStr3) + 3;
+DECLARE amount3 CHARACTER TRIM(SUBSTRING(subStr3 FROM 1 FOR pos3));
+
+-- Output to Environment or Debug
+SET Environment.Variables.Amount1 = amount1;
+SET Environment.Variables.Amount2 = amount2;
+SET Environment.Variables.Amount3 = amount3;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 CREATE COMPUTE MODULE SetCorrelationId
     CREATE FUNCTION Main() RETURNS BOOLEAN
     BEGIN
