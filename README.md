@@ -1,3 +1,56 @@
+CREATE COMPUTE MODULE Retry_Handler
+  CREATE FUNCTION Main() RETURNS BOOLEAN
+  BEGIN
+    DECLARE maxAttempts INTEGER CAST(POLICY('RetryPolicy', 'UserDefined')['maxAttempts'] AS INTEGER);
+    DECLARE backoff INTEGER CAST(POLICY('RetryPolicy', 'UserDefined')['backoffMillis'] AS INTEGER);
+
+    DECLARE attempt INTEGER COALESCE(InputRoot.JSON.Data.retryAttempt, 0) + 1;
+
+    IF attempt <= maxAttempts THEN
+       SET OutputRoot.JSON.Data = InputRoot.JSON.Data;
+       SET OutputRoot.JSON.Data.retryAttempt = attempt;
+       PROPAGATE TO TERMINAL 'out';  -- goes to MQOutput(RETRY.Q)
+    ELSE
+       -- Max attempts reached → Send to DeadLetter queue
+       SET OutputRoot.JSON.Data.status = 'FAILED';
+       PROPAGATE TO TERMINAL 'alternate';
+    END IF;
+    RETURN FALSE;
+  END;
+END MODULE;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 DECLARE inString CHARACTER InputRoot.BLOB;  -- Or InputRoot.BLOB.BLOB depending on your flow
 DECLARE str CHARACTER CAST(inString AS CHARACTER CCSID InputProperties.CodedCharSetId);
 
