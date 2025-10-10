@@ -1,3 +1,76 @@
+import com.ibm.broker.javacompute.*;
+import com.ibm.broker.plugin.*;
+
+public class ReadPolicyAndDecide extends MbJavaComputeNode {
+
+    @Override
+    public void evaluate(MbMessageAssembly inAssembly) throws MbException {
+
+        // Define two terminals for routing
+        MbOutputTerminal outRetry = getOutputTerminal("outRetry");
+        MbOutputTerminal outDLQ = getOutputTerminal("outDLQ");
+
+        MbMessage inMessage = inAssembly.getMessage();
+        MbMessage outMessage = new MbMessage(inMessage);
+        MbMessageAssembly outAssembly = new MbMessageAssembly(inAssembly, outMessage);
+
+        try {
+            // ---- READ POLICY ----
+            String policyProject = "retry";        // your policy project name
+            String policyName = "retryqueue";      // your policy name
+
+            MbPolicy policy = MbPolicyManager.getInstance()
+                                  .getPolicy(policyProject, policyName, "UserDefined");
+
+            // Read policy properties
+            int maxAttempts = Integer.parseInt(policy.getPropertyValueAsString("maxAttempts"));
+            int backoffMillis = Integer.parseInt(policy.getPropertyValueAsString("backoffMillis"));
+
+            // ---- READ CURRENT ATTEMPT ----
+            MbElement jsonData = outMessage.getRootElement().getFirstElementByPath("JSON/Data");
+            int attempt = 0;
+
+            if (jsonData != null && jsonData.getFirstElementByPath("retryAttempt") != null) {
+                attempt = jsonData.getFirstElementByPath("retryAttempt").getValueAsInt();
+            }
+
+            // ---- APPLY BACKOFF (optional delay before next retry) ----
+            if (attempt > 0 && backoffMillis > 0) {
+                Thread.sleep(backoffMillis);  // delay next attempt
+            }
+
+            // ---- DECISION BASED ON ATTEMPT COUNT ----
+            if (attempt < maxAttempts) {
+                // Send to RETRY queue again
+                outRetry.propagate(outAssembly);
+            } else {
+                // Mark as FAILED and send to DLQ
+                jsonData.createElementAsLastChild(MbElement.TYPE_NAME_VALUE, "status", "FAILED");
+                outDLQ.propagate(outAssembly);
+            }
+
+        } catch (InterruptedException ie) {
+            throw new MbUserException(this, "evaluate()", "", "", "Backoff interrupted: " + ie, null);
+
+        } catch (Exception e) {
+            throw new MbUserException(this, "evaluate()", "", "", "Error: " + e.toString(), null);
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 CREATE COMPUTE MODULE Retry_Handler
   CREATE FUNCTION Main() RETURNS BOOLEAN
   BEGIN
