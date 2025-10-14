@@ -1,3 +1,63 @@
+import com.ibm.broker.javacompute.MbJavaComputeNode;
+import com.ibm.broker.plugin.*;
+
+public class SetRetryProperties extends MbJavaComputeNode {
+
+    public void evaluate(MbMessageAssembly inAssembly) throws MbException {
+        MbMessage inMessage = inAssembly.getMessage();
+        MbMessage outMessage = new MbMessage(inMessage);
+        MbMessageAssembly outAssembly = new MbMessageAssembly(inAssembly, outMessage);
+
+        try {
+            // Read retry parameters (hardcoded or load from file)
+            int maxRetryCount = 3;        // e.g. from policy later
+            int retryInterval = 5000;     // 5 seconds backoff
+
+            MbElement root = outMessage.getRootElement();
+            MbElement env = root.createElementAsLastChild(MbElement.TYPE_NAME_VALUE, "Environment", null);
+            env.createElementAsLastChild(MbElement.TYPE_NAME_VALUE, "MaxRetryCount", maxRetryCount);
+            env.createElementAsLastChild(MbElement.TYPE_NAME_VALUE, "RetryInterval", retryInterval);
+
+            // propagate to next node (MainProcess)
+            MbOutputTerminal out = getOutputTerminal("out");
+            out.propagate(outAssembly);
+
+        } catch (Exception e) {
+            throw new MbUserException(this, "evaluate()", "", "", e.toString(), null);
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import com.ibm.broker.javacompute.*;
 import com.ibm.broker.plugin.*;
 
