@@ -1,3 +1,68 @@
+CREATE COMPUTE MODULE RetryHandler
+CREATE FUNCTION Main() RETURNS BOOLEAN
+BEGIN
+    DECLARE currentRetry INT;
+    DECLARE maxRetry INT;
+    DECLARE retryInterval INT;
+
+    -- Read from Environment
+    SET maxRetry = COALESCE(Environment.MaxRetryCount, 3);
+    SET retryInterval = COALESCE(Environment.RetryInterval, 5000);
+
+    -- Read from MQMD UserIdentifier or custom header (for count)
+    SET currentRetry = COALESCE(CAST(InputRoot.Properties.RetryCount AS INTEGER), 0);
+    SET currentRetry = currentRetry + 1;
+
+    IF currentRetry <= maxRetry THEN
+        -- Schedule next retry
+        SET OutputRoot.MQMD.Expiry = retryInterval; -- can use MQRFH2 or timer queue logic
+        SET OutputRoot.Properties.RetryCount = currentRetry;
+        PROPAGATE TO TERMINAL 'RequeueOutput';
+    ELSE
+        -- Move to DLQ
+        PROPAGATE TO TERMINAL 'DLQOutput';
+    END IF;
+
+    RETURN TRUE;
+END;
+END MODULE;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+CREATE COMPUTE MODULE MainLogic
+CREATE FUNCTION Main() RETURNS BOOLEAN
+BEGIN
+    DECLARE shouldFail BOOLEAN TRUE; -- simulate failure
+    IF shouldFail THEN
+        THROW USER EXCEPTION CATALOG 'Retry' MESSAGE 1001 VALUES('Simulated failure');
+    END IF;
+
+    -- If success, pass to success output (MQOutput, etc.)
+    RETURN TRUE;
+END;
+END MODULE;
+
+
+
+
+
+
+
+
+
 import com.ibm.broker.javacompute.MbJavaComputeNode;
 import com.ibm.broker.plugin.*;
 
