@@ -1,3 +1,69 @@
+CREATE COMPUTE MODULE PrepareEmail
+  CREATE FUNCTION Main() RETURNS BOOLEAN
+  BEGIN
+    -- Read incoming event message (JSON)
+    DECLARE jsonData REFERENCE TO InputRoot.JSON.Data;
+
+    -- Create output structure for SMTP
+    SET OutputRoot.MIME.Headers."Content-Type" = 'text/plain; charset=utf-8';
+
+    -- FROM address (must match Gmail account used in SMTP security identity)
+    SET OutputRoot.EmailOutputHeader.From = 'yourname@gmail.com';
+
+    -- TO address (you can also read from jsonData if dynamic)
+    SET OutputRoot.EmailOutputHeader.To = 'recipient@example.com';
+
+    -- SUBJECT line
+    SET OutputRoot.EmailOutputHeader.Subject = 'Customer Onboarding Successful';
+
+    -- MESSAGE BODY
+    SET OutputRoot.BLOB.BLOB = CAST(
+      'Hello ' || COALESCE(jsonData.CustomerName, 'User') ||
+      ',\n\nYour onboarding was successful!\n\nThank you,\nCustomer Support.'
+      AS BLOB CCSID InputRoot.Properties.CodedCharSetId);
+
+    RETURN TRUE;
+  END;
+END MODULE;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 CREATE COMPUTE MODULE RetryHandler
 CREATE FUNCTION Main() RETURNS BOOLEAN
 BEGIN
