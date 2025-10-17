@@ -1,3 +1,73 @@
+public class RetryHandler extends MbJavaComputeNode {
+
+    @Override
+    public void evaluate(MbMessageAssembly inAssembly) throws MbException {
+        MbMessage inMessage = inAssembly.getMessage();
+        MbMessage outMessage = new MbMessage(inMessage);
+        MbMessageAssembly outAssembly = new MbMessageAssembly(inAssembly, outMessage);
+
+        MbElement envRoot = inAssembly.getLocalEnvironment().getRootElement();
+
+        // ✅ Check if already present (so we don’t re-read from policy every time)
+        MbElement retryConfig = envRoot.getFirstElementByPath("Variables/RetryConfig");
+        if (retryConfig == null) {
+            retryConfig = envRoot.createElementAsLastChild(MbElement.TYPE_NAME, "Variables", null)
+                                 .createElementAsLastChild(MbElement.TYPE_NAME, "RetryConfig", null);
+
+            // --- Fetch from Policy only once ---
+            MbPolicy policy = MbPolicy.getPolicy("UserDefined", "RetryPolicy");
+            String maxRetryStr = policy.getPropertyValueAsString("maxRetryCount");
+            String retryIntervalStr = policy.getPropertyValueAsString("retryInterval");
+
+            retryConfig.createElementAsLastChild(MbElement.TYPE_NAME_VALUE, "MaxRetryCount", maxRetryStr);
+            retryConfig.createElementAsLastChild(MbElement.TYPE_NAME_VALUE, "RetryInterval", retryIntervalStr);
+
+            // ✅ Set in headers for downstream compute
+            MbElement headers = inMessage.getRootElement().getFirstElementByPath("Properties");
+            headers.createElementAsLastChild(MbElement.TYPE_NAME_VALUE, "MaxRetryCount", maxRetryStr);
+            headers.createElementAsLastChild(MbElement.TYPE_NAME_VALUE, "RetryInterval", retryIntervalStr);
+        }
+
+        // ✅ Propagate to next node
+        MbOutputTerminal out = getOutputTerminal("out");
+        out.propagate(outAssembly);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 CREATE COMPUTE MODULE PrepareEmail
   CREATE FUNCTION Main() RETURNS BOOLEAN
   BEGIN
