@@ -1,3 +1,101 @@
+import com.ibm.broker.plugin.*;
+
+public class RetryHandler extends MbJavaComputeNode {
+
+    @Override
+    public void evaluate(MbMessageAssembly inAssembly) throws MbException {
+        MbMessage inMessage = inAssembly.getMessage();
+        MbMessage outMessage = new MbMessage(inMessage);
+        MbMessageAssembly outAssembly = new MbMessageAssembly(inAssembly, outMessage);
+
+        MbElement envRoot = outAssembly.getLocalEnvironment().getRootElement();
+        MbElement props = outMessage.getRootElement().getFirstElementByPath("Properties");
+
+        // 🔹 Try to get existing retry metadata
+        MbElement retryConfig = envRoot.getFirstElementByPath("Variables/RetryConfig");
+        int maxRetry = 0;
+        int retryInterval = 0;
+
+        if (retryConfig == null) {
+            retryConfig = envRoot.createElementAsLastChild(MbElement.TYPE_NAME, "Variables", null)
+                                 .createElementAsLastChild(MbElement.TYPE_NAME, "RetryConfig", null);
+
+            // ✅ First attempt → fetch from policy
+            MbPolicy policy = MbPolicy.getPolicy("UserDefined", "RetryPolicy");
+            maxRetry = Integer.parseInt(policy.getPropertyValueAsString("maxRetryCount"));
+            retryInterval = Integer.parseInt(policy.getPropertyValueAsString("retryInterval"));
+
+            retryConfig.createElementAsLastChild(MbElement.TYPE_NAME_VALUE, "MaxRetryCount", maxRetry);
+            retryConfig.createElementAsLastChild(MbElement.TYPE_NAME_VALUE, "RetryInterval", retryInterval);
+        } else {
+            maxRetry = Integer.parseInt(retryConfig.getFirstElementByPath("MaxRetryCount").getValueAsString());
+            retryInterval = Integer.parseInt(retryConfig.getFirstElementByPath("RetryInterval").getValueAsString());
+        }
+
+        // 🔹 Handle Retry Count (Header-based)
+        MbElement retryCountEl = props.getFirstElementByPath("RetryCount");
+        int retryCount = 0;
+
+        if (retryCountEl == null) {
+            retryCount = 1;  // first try
+        } else {
+            retryCount = Integer.parseInt(retryCountEl.getValueAsString()) + 1;  // increment
+        }
+
+        // 🔹 Set updated retryCount in both Header & Environment
+        props.createElementAsLastChild(MbElement.TYPE_NAME_VALUE, "RetryCount", retryCount);
+        retryConfig.createElementAsLastChild(MbElement.TYPE_NAME_VALUE, "RetryCount", retryCount);
+
+        // 🔹 Log or trace
+        MbService.logInfo("RetryHandler", "evaluate",
+                "Attempt " + retryCount + " of " + maxRetry + ", RetryInterval=" + retryInterval);
+
+        // 🔹 Check max retry
+        MbOutputTerminal out = getOutputTerminal("out");
+        MbOutputTerminal fail = getOutputTerminal("alternate");
+
+        if (retryCount <= maxRetry) {
+            out.propagate(outAssembly);   // go to next compute / processing flow
+        } else {
+            fail.propagate(outAssembly);  // route to DLQ
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 CREATE COMPUTE MODULE RetryCompute
   CREATE FUNCTION Main() RETURNS BOOLEAN
   BEGIN
