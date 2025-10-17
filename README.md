@@ -1,3 +1,33 @@
+CREATE COMPUTE MODULE RetryCompute
+  CREATE FUNCTION Main() RETURNS BOOLEAN
+  BEGIN
+    DECLARE maxRetry INTEGER FIELDVALUE(InputRoot.Properties.MaxRetryCount);
+    DECLARE retryInterval INTEGER FIELDVALUE(InputRoot.Properties.RetryInterval);
+
+    -- Example usage
+    CALL Log('Max Retries: ' || CAST(maxRetry AS CHARACTER));
+    CALL Log('Retry Interval: ' || CAST(retryInterval AS CHARACTER));
+
+    RETURN TRUE;
+  END;
+END MODULE;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 public class RetryHandler extends MbJavaComputeNode {
 
     @Override
