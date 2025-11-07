@@ -1,3 +1,61 @@
+CREATE COMPUTE MODULE LoadErrorCache
+CREATE FUNCTION Main() RETURNS BOOLEAN
+BEGIN
+    DECLARE jsonBlob BLOB ASBITSTREAM(InputRoot.BLOB.BLOB, CCSID InputProperties.CodedCharSetId);
+    DECLARE jsonChar CHARACTER CAST(jsonBlob AS CHARACTER CCSID InputProperties.CodedCharSetId);
+    DECLARE jsonRef REFERENCE TO InputRoot.JSON.Data;
+    
+    -- Parse JSON into local variable
+    SET jsonRef = InputRoot.JSON.Data;
+    
+    -- Iterate and store in cache
+    DECLARE key CHARACTER;
+    DECLARE value CHARACTER;
+    DECLARE mapRef REFERENCE TO jsonRef;
+    MOVE mapRef FIRSTCHILD;
+    WHILE LASTMOVE(mapRef) DO
+        SET key = FIELDNAME(mapRef);
+        SET value = FIELDVALUE(mapRef);
+        CALL MbGlobalMapPut('ErrorMap', key, value);
+        MOVE mapRef NEXTSIBLING;
+    END WHILE;
+
+    RETURN TRUE;
+END;
+END MODULE;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import com.ibm.broker.plugin.*;
 
 public class RetryHandler extends MbJavaComputeNode {
