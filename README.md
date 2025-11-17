@@ -1,3 +1,17 @@
+private static boolean slowEquals(byte[] a, byte[] b) {
+    int diff = a.length ^ b.length;
+    for (int i = 0; i < a.length && i < b.length; i++) {
+        diff |= a[i] ^ b[i];
+    }
+    return diff == 0;
+}
+
+
+
+
+
+
+
 CREATE COMPUTE MODULE LoadErrorCache
 CREATE FUNCTION Main() RETURNS BOOLEAN
 BEGIN
