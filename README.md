@@ -1,3 +1,51 @@
+var hm = require('header-math');
+
+// Add security headers
+hm.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+hm.setHeader('X-Frame-Options', 'DENY');
+hm.setHeader('X-Content-Type-Options', 'nosniff');
+hm.setHeader('Content-Security-Policy', "default-src 'self'");
+hm.setHeader('Permissions-Policy', 'geolocation=(), microphone=()');
+hm.setHeader('Referrer-Policy', 'no-referrer');
+
+// OPTIONAL: Print them to log
+console.error("Security headers added:", JSON.stringify(hm.listHeaders()));
+
+// Return actual response body untouched
+session.output.write(session.input.readAsBuffer());
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 private static boolean slowEquals(byte[] a, byte[] b) {
     int diff = a.length ^ b.length;
     for (int i = 0; i < a.length && i < b.length; i++) {
