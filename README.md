@@ -1,3 +1,92 @@
+public class RetryHandler extends MbJavaComputeNode {
+
+    @Override
+    public void evaluate(MbMessageAssembly inAssembly) throws MbException {
+
+        MbOutputTerminal outRetry = getOutputTerminal("out");
+        MbOutputTerminal outDLQ = getOutputTerminal("alternate");
+
+        MbMessage inMessage = inAssembly.getMessage();
+        MbMessage outMessage = new MbMessage(inMessage);
+        MbMessageAssembly outAssembly = new MbMessageAssembly(inAssembly, outMessage);
+
+        try {
+
+            System.out.println("Retry Handler Invoked...");
+
+            // FOLDER: Environment.Variables.Retry
+            MbElement retryRoot = inAssembly.getLocalEnvironment().getRootElement()
+                                             .getFirstElementByPath("Variables/Retry");
+
+            if (retryRoot == null) {
+                retryRoot = inAssembly.getLocalEnvironment().getRootElement()
+                                      .getFirstElementByPath("Variables")
+                                      .createElementAsLastChild(MbElement.TYPE_NAME, "Retry", null);
+
+                retryRoot.createElementAsLastChild(MbElement.TYPE_NAME_VALUE, "Count", 1);
+                retryRoot.createElementAsLastChild(MbElement.TYPE_NAME_VALUE, "Max", 3);
+            }
+
+            int count = retryRoot.getFirstElementByName("Count").getValueAsInt();
+            int max   = retryRoot.getFirstElementByName("Max").getValueAsInt();
+
+            if (count < max) {
+                // Increase retry count
+                retryRoot.getFirstElementByName("Count").setValue(count + 1);
+
+                System.out.println("Retrying attempt " + (count + 1));
+
+                outRetry.propagate(outAssembly);
+            } else {
+                System.out.println("Max retry reached → sending to DLQ terminal");
+                outDLQ.propagate(outAssembly);
+            }
+
+        } catch (Exception e) {
+            throw new MbUserException(this, "evaluate", "", "", e.toString(), null);
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 var hm = require('header-math');
 
 // Add security headers
