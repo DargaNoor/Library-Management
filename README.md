@@ -1,3 +1,72 @@
+import com.ibm.broker.config.proxy.PolicyManager;
+import com.ibm.broker.config.proxy.UserDefinedPolicy;
+import com.ibm.broker.config.proxy.MbService;
+
+public void evaluate(MbMessageAssembly inAssembly) throws MbException {
+
+    String policyProject = "MyRetryPolicies";   // MUST match project name
+    String policyName = "RetryQueue";           // MUST match policy file name
+
+    UserDefinedPolicy udp = (UserDefinedPolicy)
+            PolicyManager.getPolicy(policyProject, "UserDefined", policyName);
+
+    if (udp == null) {
+        MbService.logWarning("RetryPolicy", "evaluate",
+                "Policy not found: " + policyProject + "/" + policyName, null);
+        throw new MbUserException(this, "evaluate", "", "", 
+                "POLICY NULL", null);
+    }
+
+    String maxAttempts = udp.getPropertyValueAsString("maxAttempts");
+    String interval = udp.getPropertyValueAsString("backoffInterval");
+
+    MbService.logInfo("RetryPolicy", "evaluate",
+            "maxAttempts=" + maxAttempts + " interval=" + interval, null);
+
+    getOutputTerminal("out").propagate(inAssembly);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 public class RetryHandler extends MbJavaComputeNode {
 
     @Override
