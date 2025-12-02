@@ -1,3 +1,50 @@
+CREATE COMPUTE MODULE EmailBuild
+    CREATE FUNCTION Main() RETURNS BOOLEAN
+    BEGIN
+
+        -- Create email body as text
+        DECLARE bodyTxt CHARACTER 'This is a test email from IBM ACE.';
+
+        CREATE LASTCHILD OF OutputRoot DOMAIN('BLOB')
+            NAME 'BLOB' VALUE CAST(bodyTxt AS BLOB CCSID 1208);
+
+        -- Email Subject
+        SET OutputLocalEnvironment.Destination.Email.Subject = 'ACE Email Test';
+
+        -- Recipient
+        SET OutputLocalEnvironment.Destination.Email.To = 'someone@example.com';
+
+        -- From address (OPTIONAL because EmailOutput node also has this)
+        -- SET OutputLocalEnvironment.Destination.Email.From = 'dnoorali2015@gmail.com';
+
+        RETURN TRUE;
+    END;
+END MODULE;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import com.ibm.broker.config.proxy.PolicyManager;
 import com.ibm.broker.config.proxy.UserDefinedPolicy;
 import com.ibm.broker.config.proxy.MbService;
