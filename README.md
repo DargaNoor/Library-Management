@@ -1,4 +1,39 @@
-import com.ibm.json.java.JSONObject;
+private String mapToJson(Map<String, List<String>> map) {
+    StringBuilder sb = new StringBuilder();
+    sb.append("{");
+
+    boolean firstKey = true;
+
+    for (Map.Entry<String, List<String>> entry : map.entrySet()) {
+
+        String key = entry.getKey();
+        if (key == null) key = "StatusLine";
+
+        if (!firstKey) sb.append(",");
+        firstKey = false;
+
+        sb.append("\"").append(escape(key)).append("\":");
+
+        // Write array
+        sb.append("[");
+        boolean firstVal = true;
+        for (String v : entry.getValue()) {
+            if (!firstVal) sb.append(",");
+            firstVal = false;
+
+            sb.append("\"").append(escape(v)).append("\"");
+        }
+        sb.append("]");
+    }
+
+    sb.append("}");
+    return sb.toString();
+}
+
+private String escape(String s) {
+    return s.replace("\\", "\\\\")
+            .replace("\"", "\\\"");
+}import com.ibm.json.java.JSONObject;
 import com.ibm.json.java.JSONArray;
 
 Map<String, List<String>> headerMap = CONN.getHeaderFields();
@@ -30,7 +65,7 @@ String headerJsonString = jsonHeaders.serialize();
 
 
 
-
+}
 
 
 
