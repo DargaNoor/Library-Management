@@ -1,3 +1,57 @@
+private String mapToJson(Map map) {
+
+    StringBuilder sb = new StringBuilder();
+    sb.append("{");
+
+    boolean firstKey = true;
+
+    for (Object objEntry : map.entrySet()) {
+
+        Map.Entry entry = (Map.Entry) objEntry;
+
+        String key = (entry.getKey() == null) ? "StatusLine" : entry.getKey().toString();
+
+        if (!firstKey) sb.append(",");
+        firstKey = false;
+
+        sb.append("\"").append(escape(key)).append("\":");
+
+        // value is List<String> BUT ACE treats it as raw List
+        List values = (List) entry.getValue();
+
+        sb.append("[");
+        boolean firstVal = true;
+
+        for (Object v : values) {
+            if (!firstVal) sb.append(",");
+            firstVal = false;
+
+            sb.append("\"").append(escape(v.toString())).append("\"");
+        }
+        sb.append("]");
+    }
+
+    sb.append("}");
+    return sb.toString();
+}
+
+private String escape(String s) {
+    return s.replace("\\", "\\\\")
+            .replace("\"", "\\\"");
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 private String mapToJson(Map<String, List<String>> map) {
     StringBuilder sb = new StringBuilder();
     sb.append("{");
