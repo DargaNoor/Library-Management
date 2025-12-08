@@ -1,4 +1,55 @@
-CREATE COMPUTE MODULE EmailBuild
+import com.ibm.json.java.JSONObject;
+import com.ibm.json.java.JSONArray;
+
+Map<String, List<String>> headerMap = CONN.getHeaderFields();
+
+JSONObject jsonHeaders = new JSONObject();
+
+for (Map.Entry<String, List<String>> entry : headerMap.entrySet()) {
+
+    String key = entry.getKey();
+    List<String> values = entry.getValue();
+
+    if (key == null) {
+        key = "StatusLine";     // since null key not allowed in JSON
+    }
+
+    JSONArray arr = new JSONArray();
+    arr.addAll(values);
+
+    jsonHeaders.put(key, arr);
+}
+
+// Serialize to string
+String headerJsonString = jsonHeaders.serialize();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+cREATE COMPUTE MODULE EmailBuild
     CREATE FUNCTION Main() RETURNS BOOLEAN
     BEGIN
 
