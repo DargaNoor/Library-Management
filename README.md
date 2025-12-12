@@ -1,3 +1,48 @@
+var fs = require('fs');
+var crypto = require('crypto');
+
+var publicKey = fs.readFileSync('local:///publickey.pem');
+
+var verify = crypto.createVerify('RSA-SHA256');
+verify.update(PlainReq);
+
+var ok = verify.verify(publicKey, Signature, 'base64');
+
+session.output.write({valid: ok});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <?xml version="1.0" encoding="UTF-8"?> 
 <Configuration status="WARN">
     <Appenders>
