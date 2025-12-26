@@ -1,3 +1,19 @@
+SignedInfo si = SIG_FACTORY.newSignedInfo(
+    SIG_FACTORY.newCanonicalizationMethod(
+        CanonicalizationMethod.INCLUSIVE,
+        (C14NMethodParameterSpec) null
+    ),
+    SIG_FACTORY.newSignatureMethod(
+        "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256",
+        null
+    ),
+    Collections.singletonList(ref)
+);
+
+
+
+
+
 import com.ibm.broker.javacompute.MbJavaComputeNode;
 import com.ibm.broker.plugin.*;
 
