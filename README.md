@@ -1,3 +1,134 @@
+// ================= STATIC CACHES (CLASS LEVEL) =================
+
+private static final XMLSignatureFactory SIG_FACTORY =
+        XMLSignatureFactory.getInstance("DOM");
+
+private static final ThreadLocal<DocumentBuilderFactory> DBF =
+        ThreadLocal.withInitial(() -> {
+            DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
+            f.setNamespaceAware(true);
+            return f;
+        });
+
+private static volatile KeyStore.PrivateKeyEntry PRIVATE_KEY_ENTRY;
+
+// Load keystore ONCE only
+private static KeyStore.PrivateKeyEntry loadKeyOnce(String propertiesPath) throws Exception {
+    if (PRIVATE_KEY_ENTRY == null) {
+        synchronized (CkycRequest.class) {
+            if (PRIVATE_KEY_ENTRY == null) {
+                PRIVATE_KEY_ENTRY = getKeyEntryFromKeystore(propertiesPath);
+            }
+        }
+    }
+    return PRIVATE_KEY_ENTRY;
+}
+
+// ================= SAFE SIGN FUNCTION =================
+
+public static Document signUsingPrivateKey(
+        String xmlDoc,
+        boolean includeKeyInfo,
+        String propertiesPath
+) throws Exception {
+
+    // 1️⃣ Parse XML (unavoidable, but optimized)
+    DocumentBuilderFactory dbf = DBF.get();
+    Document xmlDocument = dbf.newDocumentBuilder()
+            .parse(new InputSource(new StringReader(xmlDoc)));
+
+    // 2️⃣ Reference (SHA-256 OK)
+    Reference ref = SIG_FACTORY.newReference(
+            "",
+            SIG_FACTORY.newDigestMethod(DigestMethod.SHA256, null),
+            Collections.singletonList(
+                    SIG_FACTORY.newTransform(
+                            Transform.ENVELOPED,
+                            (TransformParameterSpec) null)),
+            null,
+            null
+    );
+
+    // 3️⃣ SignedInfo (RSA-SHA1 kept as-is for compatibility)
+    SignedInfo signedInfo = SIG_FACTORY.newSignedInfo(
+            SIG_FACTORY.newCanonicalizationMethod(
+                    CanonicalizationMethod.INCLUSIVE,
+                    (C14NMethodParameterSpec) null),
+            SIG_FACTORY.newSignatureMethod(
+                    SignatureMethod.RSA_SHA1,   // keep as-is if system requires
+                    null),
+            Collections.singletonList(ref)
+    );
+
+    // 4️⃣ Load key ONLY ONCE
+    KeyStore.PrivateKeyEntry keyEntry = loadKeyOnce(propertiesPath);
+    if (keyEntry == null) {
+        throw new MbUserException(
+                "CkycRequest",
+                "signUsingPrivateKey",
+                "",
+                "",
+                "Private key entry not available",
+                null
+        );
+    }
+
+    X509Certificate cert =
+            (X509Certificate) keyEntry.getCertificate();
+
+    KeyInfo keyInfo = includeKeyInfo
+            ? getKeyInfo(cert, SIG_FACTORY)
+            : null;
+
+    // 5️⃣ Sign (CPU-heavy but controlled)
+    DOMSignContext signContext =
+            new DOMSignContext(
+                    keyEntry.getPrivateKey(),
+                    xmlDocument.getDocumentElement()
+            );
+
+    XMLSignature signature =
+            SIG_FACTORY.newXMLSignature(signedInfo, keyInfo);
+
+    signature.sign(signContext);
+
+    // 6️⃣ Return DOM (no extra copies)
+    return xmlDocument;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 SignedInfo si = SIG_FACTORY.newSignedInfo(
     SIG_FACTORY.newCanonicalizationMethod(
         CanonicalizationMethod.INCLUSIVE,
