@@ -1,3 +1,194 @@
+import com.ibm.broker.javacompute.MbJavaComputeNode;
+import com.ibm.broker.plugin.*;
+
+import javax.xml.crypto.dsig.*;
+import javax.xml.crypto.dsig.dom.DOMSignContext;
+import javax.xml.crypto.dsig.spec.*;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
+
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.security.*;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.util.Collections;
+import java.util.concurrent.Semaphore;
+import java.util.Base64;
+
+public class CKYCDownload_sys_JavaCompute extends MbJavaComputeNode {
+
+    /* ---------- THREAD & LOAD CONTROL ---------- */
+    private static final Semaphore CRYPTO_LIMIT = new Semaphore(40);
+
+    /* ---------- CACHED FACTORIES ---------- */
+    private static final XMLSignatureFactory SIG_FACTORY =
+            XMLSignatureFactory.getInstance("DOM");
+
+    private static final ThreadLocal<DocumentBuilderFactory> DBF =
+            ThreadLocal.withInitial(() -> {
+                DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
+                f.setNamespaceAware(true);
+                return f;
+            });
+
+    private static final ThreadLocal<TransformerFactory> TF =
+            ThreadLocal.withInitial(TransformerFactory::newInstance);
+
+    /* ---------- PRIVATE KEY CACHE ---------- */
+    private static volatile PrivateKey PRIVATE_KEY;
+
+    private static PrivateKey loadPrivateKeyOnce() throws Exception {
+        if (PRIVATE_KEY == null) {
+            synchronized (CKYCDownload_sys_JavaCompute.class) {
+                if (PRIVATE_KEY == null) {
+
+                    // 🔴 MOVE THIS TO PROPERTY FILE LATER
+                    String base64PrivateKey =
+                            "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC...";
+
+                    byte[] decoded = Base64.getDecoder().decode(base64PrivateKey);
+                    PKCS8EncodedKeySpec keySpec =
+                            new PKCS8EncodedKeySpec(decoded);
+
+                    KeyFactory kf = KeyFactory.getInstance("RSA");
+                    PRIVATE_KEY = kf.generatePrivate(keySpec);
+                }
+            }
+        }
+        return PRIVATE_KEY;
+    }
+
+    /* ---------- MAIN EXECUTION ---------- */
+    @Override
+    public void evaluate(MbMessageAssembly inAssembly) throws MbException {
+
+        MbOutputTerminal out = getOutputTerminal("out");
+        MbMessage outMessage = new MbMessage();
+        MbMessageAssembly outAssembly =
+                new MbMessageAssembly(inAssembly, outMessage);
+
+        try {
+            // 🔐 Prevent CPU & thread starvation
+            CRYPTO_LIMIT.acquire();
+
+            MbElement xmlElem =
+                    inAssembly.getMessage().getRootElement().getLastChild();
+
+            byte[] xmlBytes =
+                    xmlElem.toBitstream(null, null, null, 0, 0, 0);
+
+            String signedXml =
+                    createDigitalSignature(new String(xmlBytes));
+
+            MbElement outRoot = outMessage.getRootElement();
+            MbElement parser =
+                    outRoot.createElementAsLastChild("XMLNSC");
+
+            parser.createElementAsLastChild(
+                    MbElement.TYPE_NAME_VALUE,
+                    "DigiSign",
+                    signedXml
+            );
+
+            out.propagate(outAssembly);
+
+        } catch (Exception e) {
+            throw new MbUserException(
+                    this, "evaluate", "", "", e.toString(), null);
+        } finally {
+            // ✅ THREAD IS ALWAYS RELEASED HERE
+            CRYPTO_LIMIT.release();
+        }
+    }
+
+    /* ---------- DIGITAL SIGNATURE ---------- */
+    public String createDigitalSignature(String xml) throws Exception {
+
+        DocumentBuilderFactory dbf = DBF.get();
+        TransformerFactory tf = TF.get();
+
+        Document doc =
+                dbf.newDocumentBuilder()
+                   .parse(new InputSource(new StringReader(xml)));
+
+        Reference ref = SIG_FACTORY.newReference(
+                "",
+                SIG_FACTORY.newDigestMethod(DigestMethod.SHA256, null),
+                Collections.singletonList(
+                        SIG_FACTORY.newTransform(
+                                Transform.ENVELOPED,
+                                (TransformParameterSpec) null)),
+                null,
+                null
+        );
+
+        SignedInfo si = SIG_FACTORY.newSignedInfo(
+                SIG_FACTORY.newCanonicalizationMethod(
+                        CanonicalizationMethod.INCLUSIVE,
+                        (C14NMethodParameterSpec) null),
+                SIG_FACTORY.newSignatureMethod(
+                        SignatureMethod.RSA_SHA256, null),
+                Collections.singletonList(ref)
+        );
+
+        DOMSignContext signContext =
+                new DOMSignContext(
+                        loadPrivateKeyOnce(),
+                        doc.getDocumentElement());
+
+        XMLSignature signature =
+                SIG_FACTORY.newXMLSignature(si, null);
+
+        signature.sign(signContext);
+
+        StringWriter sw = new StringWriter();
+        Transformer t = tf.newTransformer();
+        t.transform(new DOMSource(doc), new StreamResult(sw));
+
+        return sw.toString();
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 var fs = require('fs');
 var crypto = require('crypto');
 
