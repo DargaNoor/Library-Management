@@ -7,6 +7,224 @@ import java.util.concurrent.*;
 import javax.xml.crypto.dsig.*;
 import javax.xml.crypto.dsig.dom.DOMSignContext;
 import javax.xml.crypto.dsig.keyinfo.KeyInfo;
+import javax.xml.crypto.dsig.keyinfo.KeyInfoFactory;
+import javax.xml.crypto.dsig.keyinfo.X509Data;
+import javax.xml.crypto.dsig.spec.C14NMethodParameterSpec;
+import javax.xml.crypto.dsig.spec.TransformParameterSpec;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
+
+/**
+ * PRODUCTION-SAFE XML SIGNING FOR IBM ACE
+ */
+public final class CryptoSignService {
+
+    // ===================== TUNING VALUES =====================
+
+    /** ❗ DO NOT SET > CPU CORES */
+    private static final int MAX_CRYPTO_THREADS = 8;
+
+    /** ❗ Max waiting requests */
+    private static final int QUEUE_SIZE = 200;
+
+    /** ❗ Prevent infinite blocking */
+    private static final int SIGN_TIMEOUT_SECONDS = 30;
+
+    // ===================== THREAD LIMITER =====================
+
+    private static final ThreadPoolExecutor CRYPTO_EXECUTOR =
+        new ThreadPoolExecutor(
+            MAX_CRYPTO_THREADS,
+            MAX_CRYPTO_THREADS,
+            0L,
+            TimeUnit.MILLISECONDS,
+            new ArrayBlockingQueue<>(QUEUE_SIZE),
+            new ThreadPoolExecutor.CallerRunsPolicy()
+        );
+
+    // ===================== KEYSTORE CACHE =====================
+
+    private static volatile KeyStore.PrivateKeyEntry PRIVATE_KEY_ENTRY;
+
+    // ===================== PUBLIC METHOD =====================
+
+    public static Document signXml(
+            String xml,
+            boolean includeKeyInfo,
+            String keystorePath
+    ) throws Exception {
+
+        Future<Document> future =
+            CRYPTO_EXECUTOR.submit(() ->
+                signInternal(xml, includeKeyInfo, keystorePath)
+            );
+
+        try {
+            return future.get(SIGN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+            throw new RuntimeException(
+                "Crypto signing timed out under load", e
+            );
+        }
+    }
+
+    // ===================== INTERNAL SIGN =====================
+
+    private static Document signInternal(
+            String xmlDoc,
+            boolean includeKeyInfo,
+            String keystorePath
+    ) throws Exception {
+
+        // XML parse
+        DocumentBuilderFactory dbf =
+                DocumentBuilderFactory.newInstance();
+        dbf.setNamespaceAware(true);
+
+        Document document = dbf.newDocumentBuilder()
+                .parse(new InputSource(new StringReader(xmlDoc)));
+
+        XMLSignatureFactory sigFactory =
+                XMLSignatureFactory.getInstance("DOM");
+
+        Reference ref = sigFactory.newReference(
+                "",
+                sigFactory.newDigestMethod(DigestMethod.SHA256, null),
+                Collections.singletonList(
+                        sigFactory.newTransform(
+                                Transform.ENVELOPED,
+                                (TransformParameterSpec) null)),
+                null,
+                null
+        );
+
+        SignedInfo signedInfo = sigFactory.newSignedInfo(
+                sigFactory.newCanonicalizationMethod(
+                        CanonicalizationMethod.INCLUSIVE,
+                        (C14NMethodParameterSpec) null),
+                sigFactory.newSignatureMethod(
+                        SignatureMethod.RSA_SHA1, null),
+                Collections.singletonList(ref)
+        );
+
+        KeyStore.PrivateKeyEntry keyEntry =
+                getPrivateKey(keystorePath);
+
+        DOMSignContext signContext =
+                new DOMSignContext(
+                        keyEntry.getPrivateKey(),
+                        document.getDocumentElement()
+                );
+
+        KeyInfo keyInfo = includeKeyInfo
+                ? createKeyInfo(
+                    (X509Certificate) keyEntry.getCertificate(),
+                    sigFactory)
+                : null;
+
+        XMLSignature signature =
+                sigFactory.newXMLSignature(
+                        signedInfo, keyInfo);
+
+        signature.sign(signContext);
+
+        return document;
+    }
+
+    // ===================== KEY INFO CREATION =====================
+
+    private static KeyInfo createKeyInfo(
+            X509Certificate cert,
+            XMLSignatureFactory sigFactory
+    ) {
+
+        KeyInfoFactory kif = sigFactory.getKeyInfoFactory();
+
+        X509Data x509Data =
+                kif.newX509Data(
+                        Collections.singletonList(cert));
+
+        return kif.newKeyInfo(
+                Collections.singletonList(x509Data));
+    }
+
+    // ===================== KEYSTORE LOADER =====================
+
+    private static KeyStore.PrivateKeyEntry getPrivateKey(
+            String keystorePath
+    ) throws Exception {
+
+        if (PRIVATE_KEY_ENTRY == null) {
+            synchronized (CryptoSignService.class) {
+                if (PRIVATE_KEY_ENTRY == null) {
+
+                    KeyStore ks = KeyStore.getInstance("PKCS12");
+                    ks.load(
+                        new java.io.FileInputStream(keystorePath),
+                        "changeit".toCharArray() // ⚠️ replace
+                    );
+
+                    String alias =
+                        ks.aliases().nextElement();
+
+                    PRIVATE_KEY_ENTRY =
+                        (KeyStore.PrivateKeyEntry)
+                            ks.getEntry(
+                                alias,
+                                new KeyStore.PasswordProtection(
+                                    "changeit".toCharArray()
+                                )
+                            );
+                }
+            }
+        }
+        return PRIVATE_KEY_ENTRY;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import java.io.StringReader;
+import java.security.KeyStore;
+import java.security.cert.X509Certificate;
+import java.util.Collections;
+import java.util.concurrent.*;
+
+import javax.xml.crypto.dsig.*;
+import javax.xml.crypto.dsig.dom.DOMSignContext;
+import javax.xml.crypto.dsig.keyinfo.KeyInfo;
 import javax.xml.crypto.dsig.spec.C14NMethodParameterSpec;
 import javax.xml.crypto.dsig.spec.TransformParameterSpec;
 import javax.xml.parsers.DocumentBuilderFactory;
