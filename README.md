@@ -1,3 +1,192 @@
+import java.io.StringReader;
+import java.security.KeyStore;
+import java.security.cert.X509Certificate;
+import java.util.Collections;
+import java.util.concurrent.*;
+
+import javax.xml.crypto.dsig.*;
+import javax.xml.crypto.dsig.dom.DOMSignContext;
+import javax.xml.crypto.dsig.keyinfo.KeyInfo;
+import javax.xml.crypto.dsig.spec.C14NMethodParameterSpec;
+import javax.xml.crypto.dsig.spec.TransformParameterSpec;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
+
+/**
+ * PRODUCTION SAFE CRYPTO SIGN SERVICE FOR IBM ACE
+ */
+public final class CryptoSignService {
+
+    // ===================== TUNING VALUES =====================
+
+    /** ❗ DO NOT SET > CPU CORES */
+    private static final int MAX_CRYPTO_THREADS = 8;
+
+    /** ❗ MAX queued requests */
+    private static final int QUEUE_SIZE = 200;
+
+    /** ❗ Timeout protection */
+    private static final int SIGN_TIMEOUT_SECONDS = 30;
+
+    // ===================== EXECUTOR =====================
+
+    private static final ThreadPoolExecutor CRYPTO_EXECUTOR =
+        new ThreadPoolExecutor(
+            MAX_CRYPTO_THREADS,
+            MAX_CRYPTO_THREADS,
+            0L,
+            TimeUnit.MILLISECONDS,
+            new ArrayBlockingQueue<>(QUEUE_SIZE),
+            new ThreadPoolExecutor.CallerRunsPolicy()
+        );
+
+    // ===================== PUBLIC ENTRY =====================
+
+    public static Document signXml(
+            String xml,
+            boolean includeKeyInfo,
+            String keystorePath
+    ) throws Exception {
+
+        Future<Document> future =
+            CRYPTO_EXECUTOR.submit(() ->
+                signInternal(xml, includeKeyInfo, keystorePath)
+            );
+
+        try {
+            return future.get(SIGN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+            throw new RuntimeException(
+                "Crypto signing timed out under high load", e
+            );
+        }
+    }
+
+    // ===================== INTERNAL SIGN LOGIC =====================
+
+    private static Document signInternal(
+            String xmlDoc,
+            boolean includeKeyInfo,
+            String keystorePath
+    ) throws Exception {
+
+        DocumentBuilderFactory dbf =
+                DocumentBuilderFactory.newInstance();
+        dbf.setNamespaceAware(true);
+
+        Document document = dbf.newDocumentBuilder()
+                .parse(new InputSource(new StringReader(xmlDoc)));
+
+        XMLSignatureFactory sigFactory =
+                XMLSignatureFactory.getInstance("DOM");
+
+        Reference ref = sigFactory.newReference(
+                "",
+                sigFactory.newDigestMethod(
+                        DigestMethod.SHA256, null),
+                Collections.singletonList(
+                        sigFactory.newTransform(
+                                Transform.ENVELOPED,
+                                (TransformParameterSpec) null)),
+                null,
+                null
+        );
+
+        SignedInfo signedInfo = sigFactory.newSignedInfo(
+                sigFactory.newCanonicalizationMethod(
+                        CanonicalizationMethod.INCLUSIVE,
+                        (C14NMethodParameterSpec) null),
+                sigFactory.newSignatureMethod(
+                        SignatureMethod.RSA_SHA1, null),
+                Collections.singletonList(ref)
+        );
+
+        KeyStore.PrivateKeyEntry keyEntry =
+                KeyStoreLoader.getPrivateKey(keystorePath);
+
+        DOMSignContext signContext =
+                new DOMSignContext(
+                        keyEntry.getPrivateKey(),
+                        document.getDocumentElement()
+                );
+
+        KeyInfo keyInfo = includeKeyInfo
+                ? KeyInfoUtil.create(
+                    (X509Certificate) keyEntry.getCertificate(),
+                    sigFactory)
+                : null;
+
+        XMLSignature signature =
+                sigFactory.newXMLSignature(
+                        signedInfo, keyInfo);
+
+        signature.sign(signContext);
+
+        return document;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // ================= STATIC CACHES (CLASS LEVEL) =================
 
 private static final XMLSignatureFactory SIG_FACTORY =
