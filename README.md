@@ -1,3 +1,37 @@
+CREATE COMPUTE MODULE PrepareFTERequest
+CREATE FUNCTION Main() RETURNS BOOLEAN
+BEGIN
+    -- Required for FT Output
+    SET LocalEnvironment.FT.CoordinationQMgr = 'QM1';
+
+    SET LocalEnvironment.FT.Source.Agent = 'SOURCE.AGENT';
+    SET LocalEnvironment.FT.Destination.Agent = 'DEST.AGENT';
+
+    SET LocalEnvironment.FT.Source.File.Name = '/data/source/input.txt';
+    SET LocalEnvironment.FT.Destination.File.Name = '/data/dest/output.txt';
+
+    SET LocalEnvironment.FT.Transfer.Mode = 'binary';
+    SET LocalEnvironment.FT.Transfer.Replace = TRUE;
+
+    -- Optional
+    SET LocalEnvironment.FT.Transfer.Priority = 5;
+
+    RETURN TRUE;
+END;
+END MODULE;
+
+
+
+
+
+
+
+
+
+
+
+
+
 import java.io.StringReader;
 import java.security.KeyStore;
 import java.security.cert.X509Certificate;
