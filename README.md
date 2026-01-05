@@ -1,4 +1,46 @@
 DECLARE fullPath CHARACTER InputRoot.JSON.Data.sourcePath;
+DECLARE i INTEGER;
+DECLARE lastSlash INTEGER DEFAULT 0;
+
+-- Loop through string to find last '/'
+SET i = 1;
+WHILE i <= LENGTH(fullPath) DO
+   IF SUBSTRING(fullPath FROM i FOR 1) = '/' THEN
+      SET lastSlash = i;
+   END IF;
+   SET i = i + 1;
+END WHILE;
+
+IF lastSlash = 0 THEN
+   THROW USER EXCEPTION
+     MESSAGE 3001
+     VALUES('Invalid file path: ' || fullPath);
+END IF;
+
+-- Directory
+SET OutputLocalEnvironment.Destination.File.Directory =
+    SUBSTRING(fullPath FROM 1 FOR lastSlash - 1);
+
+-- File name
+SET OutputLocalEnvironment.Destination.File.Name =
+    SUBSTRING(fullPath FROM lastSlash + 1);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+DECLARE fullPath CHARACTER InputRoot.JSON.Data.sourcePath;
 DECLARE revPath  CHARACTER;
 DECLARE slashPos INTEGER;
 DECLARE dirLen   INTEGER;
