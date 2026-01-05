@@ -1,3 +1,22 @@
+DECLARE fullPath CHARACTER InputRoot.JSON.Data.sourcePath;
+
+SET OutputLocalEnvironment.Destination.File.Directory =
+    SUBSTRING(fullPath FROM 1 FOR LASTINDEX(fullPath, '/') - 1);
+
+SET OutputLocalEnvironment.Destination.File.Name =
+    SUBSTRING(fullPath FROM LASTINDEX(fullPath, '/') + 1);
+
+
+
+
+
+
+
+
+
+
+
+
 CREATE COMPUTE MODULE PrepareFTERequest
 CREATE FUNCTION Main() RETURNS BOOLEAN
 BEGIN
