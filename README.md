@@ -1,4 +1,50 @@
 DECLARE fullPath CHARACTER InputRoot.JSON.Data.sourcePath;
+DECLARE revPath  CHARACTER;
+DECLARE slashPos INTEGER;
+DECLARE dirLen   INTEGER;
+
+-- Reverse the path
+SET revPath = REVERSE(fullPath);
+
+-- Find first '/' in reversed string (means last '/' in original)
+SET slashPos = POSITION('/' IN revPath);
+
+IF slashPos = 0 THEN
+   THROW USER EXCEPTION
+       MESSAGE 3002
+       VALUES('Invalid file path: ' || fullPath);
+END IF;
+
+-- Length of directory part
+SET dirLen = LENGTH(fullPath) - slashPos;
+
+-- Directory path (without trailing '/')
+SET OutputLocalEnvironment.Destination.File.Directory =
+    SUBSTRING(fullPath FROM 1 FOR dirLen);
+
+-- File name
+SET OutputLocalEnvironment.Destination.File.Name =
+    SUBSTRING(fullPath FROM dirLen + 2);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+DECLARE fullPath CHARACTER InputRoot.JSON.Data.sourcePath;
 
 SET OutputLocalEnvironment.Destination.File.Directory =
     SUBSTRING(fullPath FROM 1 FOR LASTINDEX(fullPath, '/') - 1);
