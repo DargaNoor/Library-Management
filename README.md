@@ -1,3 +1,83 @@
+DECLARE listRef REFERENCE TO InputRoot.JSON.Data.LIST[1];
+DECLARE keyRef REFERENCE TO listRef.*[1];
+
+WHILE LASTMOVE(keyRef) DO
+
+    DECLARE keyName CHARACTER FIELDNAME(keyRef);
+    DECLARE keyValue CHARACTER keyRef;
+
+    -- Example: log / process
+    SET OutputRoot.JSON.Data.Errors[keyName] = keyValue;
+
+    MOVE keyRef NEXTSIBLING;
+END WHILE;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+DECLARE listRef REFERENCE TO InputRoot.JSON.Data.LIST[1];
+DECLARE keyRef  REFERENCE TO listRef.*[1];
+
+WHILE LASTMOVE(keyRef) DO
+
+    DECLARE keyName  CHARACTER NAME(keyRef);
+    DECLARE keyValue CHARACTER keyRef;
+
+    -- Example usage
+    SET OutputRoot.JSON.Data.Errors.{keyName} = keyValue;
+
+    MOVE keyRef NEXTSIBLING;
+END WHILE;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 DECLARE fullPath CHARACTER InputRoot.JSON.Data.sourcePath;
 DECLARE i INTEGER;
 DECLARE lastSlash INTEGER DEFAULT 0;
