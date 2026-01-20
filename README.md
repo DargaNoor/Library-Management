@@ -1,3 +1,45 @@
+DECLARE ekycArrayRef REFERENCE TO InputRoot.JSON.Data.EKYC[1];
+DECLARE ekycItemRef  REFERENCE TO ekycArrayRef.*[1];
+
+WHILE LASTMOVE(ekycItemRef) DO
+
+    -- Each EKYC1 / EKYC2 object
+    DECLARE fieldName  CHARACTER ekycItemRef.FIELD_NAME;
+    DECLARE fieldValue CHARACTER ekycItemRef.FIELD_VALUE;
+
+    -- Create dynamic key-value pair
+    SET OutputRoot.JSON.Data.EKYC.{fieldName} = fieldValue;
+
+    MOVE ekycItemRef NEXTSIBLING;
+END WHILE;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 DECLARE listRef REFERENCE TO InputRoot.JSON.Data.LIST[1];
 DECLARE keyRef REFERENCE TO listRef.*[1];
 
