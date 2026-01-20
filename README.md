@@ -1,3 +1,25 @@
+DECLARE i INT 1;
+
+DECLARE objRef REFERENCE TO InputRoot.JSON.Data.EKYC[1];
+DECLARE ref    REFERENCE TO objRef.*[1];
+
+WHILE LASTMOVE(ref) DO
+
+    -- process logic
+    SET i = i + 1;
+    MOVE ref NEXTSIBLING;
+
+END WHILE;
+
+
+
+
+
+
+
+
+
+
 DECLARE ekycArrayRef REFERENCE TO InputRoot.JSON.Data.EKYC[1];
 DECLARE ekycItemRef  REFERENCE TO ekycArrayRef.*[1];
 
