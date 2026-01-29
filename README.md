@@ -1,3 +1,84 @@
+CREATE COMPUTE MODULE Chunking_Compute
+  CREATE FUNCTION Main() RETURNS BOOLEAN
+  BEGIN
+
+    -- 1️⃣ Read file as BLOB
+    DECLARE fileBlob BLOB InputRoot.BLOB.BLOB;
+    DECLARE fileSize INTEGER LENGTH(fileBlob);
+
+    -- 2️⃣ Define chunk size (100 KB)
+    DECLARE chunkSize INTEGER 100000;
+    DECLARE totalChunks INTEGER CEILING(fileSize / chunkSize);
+
+    -- 3️⃣ Metadata
+    DECLARE corrId BLOB InputRoot.Properties.MessageId;
+    DECLARE fileName CHARACTER InputLocalEnvironment.File.Name;
+
+    DECLARE offset INTEGER 1;
+    DECLARE chunkNo INTEGER 1;
+
+    -- 4️⃣ Loop to create chunks
+    WHILE offset <= fileSize DO
+
+      DECLARE currentChunk BLOB
+        SUBSTRING(fileBlob FROM offset FOR chunkSize);
+
+      -- Clear output tree
+      DELETE FIELD OutputRoot;
+
+      -- 5️⃣ Output Properties
+      SET OutputRoot.Properties.MessageDomain = 'BLOB';
+      SET OutputRoot.Properties.MessageType = 'BLOB';
+      SET OutputRoot.Properties.CorrelationId = corrId;
+
+      -- 6️⃣ Set chunk data
+      SET OutputRoot.BLOB.BLOB = currentChunk;
+
+      -- 7️⃣ Custom headers (VERY IMPORTANT)
+      SET OutputRoot.Environment.ChunkInfo.ChunkNumber = chunkNo;
+      SET OutputRoot.Environment.ChunkInfo.TotalChunks = totalChunks;
+      SET OutputRoot.Environment.ChunkInfo.FileName = fileName;
+
+      -- 8️⃣ PROPAGATE one chunk
+      PROPAGATE TO TERMINAL 'out';
+
+      SET offset = offset + chunkSize;
+      SET chunkNo = chunkNo + 1;
+
+    END WHILE;
+
+    RETURN FALSE; -- VERY IMPORTANT
+  END;
+END MODULE;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 DECLARE fileBlob BLOB InputRoot.BLOB.BLOB;
 DECLARE fileSize INTEGER LENGTH(fileBlob);
 
