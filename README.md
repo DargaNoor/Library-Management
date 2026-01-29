@@ -1,3 +1,65 @@
+DECLARE fileBlob BLOB InputRoot.BLOB.BLOB;
+DECLARE fileSize INTEGER LENGTH(fileBlob);
+
+
+
+
+DECLARE chunkSize INTEGER 100000; -- 100 KB
+DECLARE totalChunks INTEGER CEILING(fileSize / chunkSize);
+
+
+
+
+DECLARE offset INTEGER 1;
+DECLARE chunkNo INTEGER 1;
+
+WHILE offset <= fileSize DO
+
+  DECLARE currentChunk BLOB
+    SUBSTRING(fileBlob FROM offset FOR chunkSize);
+
+  SET OutputRoot.Properties.MessageType = 'BLOB';
+  SET OutputRoot.BLOB.BLOB = currentChunk;
+
+  -- Metadata
+  SET OutputRoot.MQMD.CorrelId = InputRoot.MQMD.MsgId;
+  SET OutputRoot.MQMD.GroupId = InputRoot.MQMD.MsgId;
+  SET OutputRoot.MQMD.MsgSeqNumber = chunkNo;
+  SET OutputRoot.MQMD.MsgFlags = MQMF_MSG_IN_GROUP;
+
+  PROPAGATE;
+
+  SET offset = offset + chunkSize;
+  SET chunkNo = chunkNo + 1;
+
+END WHILE;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 DECLARE i INT 1;
 
 DECLARE objRef REFERENCE TO InputRoot.JSON.Data.EKYC[1];
