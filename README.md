@@ -1,3 +1,24 @@
+-- MQ grouping & correlation (PRODUCER SIDE)
+SET OutputRoot.MQMD.MsgType = MQMT_DATAGRAM;
+
+-- Group all chunks of same file
+SET OutputRoot.MQMD.GroupId = CAST(fileName AS BLOB CCSID 1208);
+
+-- Sequence number (order matters)
+SET OutputRoot.MQMD.MsgSeqNumber = chunkNo;
+
+-- Mark message as part of group
+SET OutputRoot.MQMD.MsgFlags = MQMF_MSG_IN_GROUP;
+
+
+
+
+
+
+
+
+
+
 CREATE COMPUTE MODULE Chunking_Compute
   CREATE FUNCTION Main() RETURNS BOOLEAN
   BEGIN
