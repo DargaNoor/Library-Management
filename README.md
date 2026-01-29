@@ -6,6 +6,64 @@ CREATE COMPUTE MODULE Chunking_Compute
     DECLARE fileBlob BLOB InputRoot.BLOB.BLOB;
     DECLARE fileSize INTEGER LENGTH(fileBlob);
 
+    -- 2️⃣ Chunk size (100 KB)
+    DECLARE chunkSize INTEGER 100000;
+    DECLARE totalChunks INTEGER CEILING(fileSize / chunkSize);
+
+    -- 3️⃣ File metadata
+    DECLARE fileName CHARACTER InputLocalEnvironment.File.Name;
+
+    -- 4️⃣ Control variables
+    DECLARE offset INTEGER 1;
+    DECLARE chunkNo INTEGER 1;
+
+    WHILE offset <= fileSize DO
+
+      -- Extract chunk
+      DECLARE currentChunk BLOB
+        SUBSTRING(fileBlob FROM offset FOR chunkSize);
+
+      -- Clean output
+      DELETE FIELD OutputRoot;
+
+      -- 5️⃣ Build output message (ACE v12 way)
+      SET OutputRoot.BLOB.BLOB = currentChunk;
+
+      -- 6️⃣ Metadata via Environment (safe & correct)
+      SET Environment.ChunkInfo.FileName     = fileName;
+      SET Environment.ChunkInfo.ChunkNumber  = chunkNo;
+      SET Environment.ChunkInfo.TotalChunks  = totalChunks;
+
+      -- 7️⃣ PROPAGATE chunk
+      PROPAGATE;
+
+      -- Next chunk
+      SET offset = offset + chunkSize;
+      SET chunkNo = chunkNo + 1;
+
+    END WHILE;
+
+    RETURN FALSE;
+  END;
+END MODULE;
+
+
+
+
+
+
+
+
+
+
+CREATE COMPUTE MODULE Chunking_Compute
+  CREATE FUNCTION Main() RETURNS BOOLEAN
+  BEGIN
+
+    -- 1️⃣ Read file as BLOB
+    DECLARE fileBlob BLOB InputRoot.BLOB.BLOB;
+    DECLARE fileSize INTEGER LENGTH(fileBlob);
+
     -- 2️⃣ Define chunk size (100 KB)
     DECLARE chunkSize INTEGER 100000;
     DECLARE totalChunks INTEGER CEILING(fileSize / chunkSize);
