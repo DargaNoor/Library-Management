@@ -1,3 +1,49 @@
+CREATE COMPUTE MODULE Chunk_Consumer_Compute
+  CREATE FUNCTION Main() RETURNS BOOLEAN
+  BEGIN
+
+    -- 1️⃣ Read chunk payload
+    DECLARE chunkData BLOB InputRoot.BLOB.BLOB;
+
+    -- 2️⃣ Read MQ metadata
+    DECLARE groupId BLOB InputRoot.MQMD.GroupId;
+    DECLARE seqNo INTEGER InputRoot.MQMD.MsgSeqNumber;
+    DECLARE msgFlags INTEGER InputRoot.MQMD.MsgFlags;
+
+    -- 3️⃣ Rebuild output message
+    DELETE FIELD OutputRoot;
+    SET OutputRoot.BLOB.BLOB = chunkData;
+
+    -- 4️⃣ Pass filename via Environment (from producer)
+    SET Environment.ChunkInfo.FileName =
+      Environment.ChunkInfo.FileName;
+
+    -- 5️⃣ Detect last chunk
+    IF NOT ((msgFlags BITAND MQMF_MSG_IN_GROUP) = MQMF_MSG_IN_GROUP) THEN
+      -- Last chunk of file
+      SET Environment.ChunkInfo.IsLastChunk = TRUE;
+    ELSE
+      SET Environment.ChunkInfo.IsLastChunk = FALSE;
+    END IF;
+
+    RETURN TRUE;
+  END;
+END MODULE;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 -- MQ grouping & correlation (PRODUCER SIDE)
 SET OutputRoot.MQMD.MsgType = MQMT_DATAGRAM;
 
