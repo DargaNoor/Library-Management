@@ -2,6 +2,62 @@ CREATE COMPUTE MODULE Chunk_Consumer_Compute
   CREATE FUNCTION Main() RETURNS BOOLEAN
   BEGIN
 
+    -- 1️⃣ Read payload
+    DECLARE chunkData BLOB InputRoot.BLOB.BLOB;
+
+    -- 2️⃣ Read chunk metadata (SAFE & VALID)
+    DECLARE chunkNo INTEGER Environment.ChunkInfo.ChunkNumber;
+    DECLARE totalChunks INTEGER Environment.ChunkInfo.TotalChunks;
+    DECLARE fileName CHARACTER Environment.ChunkInfo.FileName;
+
+    -- 3️⃣ Prepare output for FileOutput
+    DELETE FIELD OutputRoot;
+    SET OutputRoot.BLOB.BLOB = chunkData;
+
+    -- 4️⃣ Detect last chunk (NO MQ FLAGS USED)
+    IF chunkNo = totalChunks THEN
+      SET Environment.ChunkInfo.IsLastChunk = TRUE;
+    ELSE
+      SET Environment.ChunkInfo.IsLastChunk = FALSE;
+    END IF;
+
+    RETURN TRUE;
+  END;
+END MODULE;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+CREATE COMPUTE MODULE Chunk_Consumer_Compute
+  CREATE FUNCTION Main() RETURNS BOOLEAN
+  BEGIN
+
     -- 1️⃣ Read chunk payload
     DECLARE chunkData BLOB InputRoot.BLOB.BLOB;
 
