@@ -1,3 +1,192 @@
+package crypto;
+
+import javax.crypto.*;
+import javax.crypto.spec.GCMParameterSpec;
+import java.nio.charset.StandardCharsets;
+import java.security.*;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
+import org.json.JSONObject;
+
+public class HybridCryptoUtil {
+
+    private static final int AES_KEY_SIZE = 256;
+    private static final int GCM_IV_LENGTH = 12;      // 96 bits
+    private static final int GCM_TAG_LENGTH = 128;    // bits
+
+    /* ===============================
+       STEP 1: Generate AES Key
+       =============================== */
+    public static SecretKey generateAESKey() throws Exception {
+        KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+        keyGen.init(AES_KEY_SIZE);
+        return keyGen.generateKey();
+    }
+
+    /* ===============================
+       STEP 1: Generate IV
+       =============================== */
+    public static byte[] generateIV() {
+        byte[] iv = new byte[GCM_IV_LENGTH];
+        new SecureRandom().nextBytes(iv);
+        return iv;
+    }
+
+    /* ===============================
+       STEP 2: AES-GCM Encrypt Payload
+       =============================== */
+    public static String encryptPayloadAES(
+            String plainText,
+            SecretKey aesKey,
+            byte[] iv
+    ) throws Exception {
+
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+        GCMParameterSpec gcmSpec =
+                new GCMParameterSpec(GCM_TAG_LENGTH, iv);
+
+        cipher.init(Cipher.ENCRYPT_MODE, aesKey, gcmSpec);
+
+        byte[] cipherText =
+                cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8));
+
+        return Base64.getEncoder().encodeToString(cipherText);
+    }
+
+    /* ===============================
+       STEP 3: RSA Encrypt AES Key
+       =============================== */
+    public static String encryptAESKeyRSA(
+            SecretKey aesKey,
+            String publicKeyBase64
+    ) throws Exception {
+
+        PublicKey publicKey = loadPublicKey(publicKeyBase64);
+
+        Cipher cipher = Cipher.getInstance(
+                "RSA/ECB/OAEPWithSHA-256AndMGF1Padding");
+
+        cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+
+        byte[] encryptedKey =
+                cipher.doFinal(aesKey.getEncoded());
+
+        return Base64.getEncoder().encodeToString(encryptedKey);
+    }
+
+    /* ===============================
+       STEP 4: RSA Encrypt IV
+       =============================== */
+    public static String encryptIVRSA(
+            byte[] iv,
+            String publicKeyBase64
+    ) throws Exception {
+
+        PublicKey publicKey = loadPublicKey(publicKeyBase64);
+
+        Cipher cipher = Cipher.getInstance(
+                "RSA/ECB/OAEPWithSHA-256AndMGF1Padding");
+
+        cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+
+        byte[] encryptedIV = cipher.doFinal(iv);
+
+        return Base64.getEncoder().encodeToString(encryptedIV);
+    }
+
+    /* ===============================
+       STEP 5: Build Final Payload
+       =============================== */
+    public static String buildFinalPayload(
+            String encryptedAESKey,
+            String encryptedIV,
+            String encryptedPayload
+    ) {
+
+        JSONObject embedded = new JSONObject();
+        embedded.put("sessionKey", encryptedAESKey);
+        embedded.put("sessionId", encryptedIV);
+        embedded.put("payload", encryptedPayload);
+
+        String encryptedData =
+                Base64.getEncoder().encodeToString(
+                        embedded.toString().getBytes(StandardCharsets.UTF_8)
+                );
+
+        JSONObject data = new JSONObject();
+        data.put("encrypted_data", encryptedData);
+
+        JSONObject finalPayload = new JSONObject();
+        finalPayload.put("data", data);
+
+        return finalPayload.toString();
+    }
+
+    /* ===============================
+       Utility: Load RSA Public Key
+       =============================== */
+    private static PublicKey loadPublicKey(String base64Key)
+            throws Exception {
+
+        byte[] keyBytes = Base64.getDecoder().decode(base64Key);
+        X509EncodedKeySpec spec =
+                new X509EncodedKeySpec(keyBytes);
+
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+        return kf.generatePublic(spec);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+public class TestHybridCrypto {
+
+    public static void main(String[] args) throws Exception {
+
+        String payload = "{\"vehicleNo\":\"MH12AB1234\",\"owner\":\"Noor\"}";
+
+        // Public key (Base64 X509)
+        String rsaPublicKeyBase64 = "MIIBIjANBgkq..."; // replace
+
+        // Step 1
+        SecretKey aesKey = HybridCryptoUtil.generateAESKey();
+        byte[] iv = HybridCryptoUtil.generateIV();
+
+        // Step 2
+        String encryptedPayload =
+                HybridCryptoUtil.encryptPayloadAES(payload, aesKey, iv);
+
+        // Step 3
+        String encryptedAESKey =
+                HybridCryptoUtil.encryptAESKeyRSA(aesKey, rsaPublicKeyBase64);
+
+        // Step 4
+        String encryptedIV =
+                HybridCryptoUtil.encryptIVRSA(iv, rsaPublicKeyBase64);
+
+        // Step 5
+        String finalJson =
+                HybridCryptoUtil.buildFinalPayload(
+                        encryptedAESKey,
+                        encryptedIV,
+                        encryptedPayload
+                );
+
+        System.out.println(finalJson);
+    }
+}
+
 X'000000000000000000000000
 
 
