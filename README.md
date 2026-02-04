@@ -7,6 +7,86 @@ BEGIN
     CREATE FIELD OutputRoot.JSON.Data.phoneNumbers;
 
     DECLARE idx INTEGER 1;
+
+    DECLARE startPos INTEGER;
+    DECLARE endPos INTEGER;
+
+    WHILE POSITION('<ns2:phoneNumbers', phoneStr) > 0 DO
+
+        -- Find full phoneNumbers block
+        SET startPos = POSITION('<ns2:phoneNumbers', phoneStr);
+        SET endPos   = POSITION('</ns2:phoneNumbers>', phoneStr)
+                       + LENGTH('</ns2:phoneNumbers>');
+
+        DECLARE phoneBlock CHARACTER
+            SUBSTRING(phoneStr FROM startPos FOR (endPos - startPos));
+
+        /* ----------------------------
+           Extract typeCode attribute
+           ---------------------------- */
+        DECLARE typePart CHARACTER;
+        DECLARE typeCode CHARACTER;
+
+        SET typePart = SUBSTRING(
+            phoneBlock
+            FROM POSITION('typeCode="', phoneBlock) + LENGTH('typeCode="')
+        );
+
+        SET typeCode = SUBSTRING(
+            typePart
+            FROM 1
+            FOR POSITION('"', typePart) - 1
+        );
+
+        /* ----------------------------
+           Extract phone value
+           ---------------------------- */
+        DECLARE valuePart CHARACTER;
+        DECLARE phoneValue CHARACTER;
+
+        SET valuePart = SUBSTRING(
+            phoneBlock
+            FROM POSITION('<ns2:value>', phoneBlock) + LENGTH('<ns2:value>')
+        );
+
+        SET phoneValue = SUBSTRING(
+            valuePart
+            FROM 1
+            FOR POSITION('</ns2:value>', valuePart) - 1
+        );
+
+        -- Build JSON
+        CREATE FIELD OutputRoot.JSON.Data.phoneNumbers[idx];
+        SET OutputRoot.JSON.Data.phoneNumbers[idx].typeCode = typeCode;
+        SET OutputRoot.JSON.Data.phoneNumbers[idx].value    = phoneValue;
+
+        SET idx = idx + 1;
+
+        -- Remove processed block from string
+        SET phoneStr = SUBSTRING(phoneStr FROM endPos + 1);
+
+    END WHILE;
+
+    RETURN TRUE;
+END;
+END MODULE;
+
+
+
+
+
+
+
+
+CREATE COMPUTE MODULE ParsePhoneNumbersFromString
+CREATE FUNCTION Main() RETURNS BOOLEAN
+BEGIN
+    DECLARE phoneStr CHARACTER InputRoot.BLOB.BLOB AS CHARACTER CCSID 1208;
+
+    CREATE LASTCHILD OF OutputRoot DOMAIN 'JSON';
+    CREATE FIELD OutputRoot.JSON.Data.phoneNumbers;
+
+    DECLARE idx INTEGER 1;
     DECLARE startPos INTEGER;
     DECLARE endPos INTEGER;
 
