@@ -1,3 +1,14 @@
+CREATE FIELD OutputRoot.JSON.Data.phoneNumbers.(FIELDNAME(phoneFieldName));
+        SET OutputRoot.JSON.Data.phoneNumbers.(FIELDNAME(phoneFieldName)).typeCode = typeCode;
+        SET OutputRoot.JSON.Data.phoneNumbers.(FIELDNAME(phoneFieldName)).value    = phoneValue;
+
+
+
+
+
+
+
+
 CREATE COMPUTE MODULE ParsePhoneNumbersFromString
 CREATE FUNCTION Main() RETURNS BOOLEAN
 BEGIN
