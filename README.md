@@ -1,3 +1,76 @@
+CREATE COMPUTE MODULE ParsePhoneNumbers_String_JSON
+CREATE FUNCTION Main() RETURNS BOOLEAN
+BEGIN
+    DECLARE phoneStr CHARACTER InputRoot.BLOB.BLOB AS CHARACTER CCSID 1208;
+
+    CREATE LASTCHILD OF OutputRoot DOMAIN 'JSON';
+    CREATE FIELD OutputRoot.JSON.Data.phoneNumbers;
+
+    DECLARE phoneParentRef REFERENCE TO OutputRoot.JSON.Data.phoneNumbers;
+
+    DECLARE idx INTEGER 1;
+
+    WHILE POSITION('<ns2:phoneNumbers', phoneStr) > 0 DO
+
+        DECLARE startPos INTEGER POSITION('<ns2:phoneNumbers', phoneStr);
+        DECLARE closeTag CHARACTER '</ns2:phoneNumbers>';
+        DECLARE closePos INTEGER POSITION(closeTag, phoneStr);
+
+        DECLARE phoneBlock CHARACTER
+            SUBSTRING(
+                phoneStr
+                FROM startPos
+                FOR closePos - startPos + LENGTH(closeTag)
+            );
+
+        /* ---- Extract typeCode ---- */
+        DECLARE typePart CHARACTER
+            SUBSTRING(
+                phoneBlock
+                FROM POSITION('typeCode="', phoneBlock) + LENGTH('typeCode="')
+            );
+
+        DECLARE typeCode CHARACTER
+            SUBSTRING(typePart FROM 1 FOR POSITION('"', typePart) - 1);
+
+        /* ---- Extract phone value ---- */
+        DECLARE valuePart CHARACTER
+            SUBSTRING(
+                phoneBlock
+                FROM POSITION('<ns2:value>', phoneBlock) + LENGTH('<ns2:value>')
+            );
+
+        DECLARE phoneValue CHARACTER
+            SUBSTRING(valuePart FROM 1 FOR POSITION('</ns2:value>', valuePart) - 1);
+
+        /* ---- Create dynamic JSON field ---- */
+        DECLARE phoneFieldName CHARACTER 'phoneNumber' || CAST(idx AS CHARACTER);
+
+        CREATE FIELD phoneParentRef.(phoneFieldName);
+        SET phoneParentRef.(phoneFieldName).typeCode = typeCode;
+        SET phoneParentRef.(phoneFieldName).value    = phoneValue;
+
+        SET idx = idx + 1;
+
+        /* ---- Remove processed phone block safely ---- */
+        SET phoneStr =
+            SUBSTRING(
+                phoneStr
+                FROM closePos + LENGTH(closeTag) + 1
+            );
+
+    END WHILE;
+
+    RETURN TRUE;
+END;
+END MODULE;
+
+
+
+
+
+
+
 CREATE FIELD OutputRoot.JSON.Data.phoneNumbers.(FIELDNAME(phoneFieldName));
         SET OutputRoot.JSON.Data.phoneNumbers.(FIELDNAME(phoneFieldName)).typeCode = typeCode;
         SET OutputRoot.JSON.Data.phoneNumbers.(FIELDNAME(phoneFieldName)).value    = phoneValue;
