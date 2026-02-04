@@ -1,3 +1,70 @@
+CREATE COMPUTE MODULE ParsePhoneNumbersFromString
+CREATE FUNCTION Main() RETURNS BOOLEAN
+BEGIN
+    DECLARE phoneStr CHARACTER InputRoot.BLOB.BLOB AS CHARACTER CCSID 1208;
+
+    CREATE LASTCHILD OF OutputRoot DOMAIN 'JSON';
+    CREATE FIELD OutputRoot.JSON.Data.phoneNumbers;
+
+    DECLARE idx INTEGER 1;
+    DECLARE startPos INTEGER;
+    DECLARE endPos INTEGER;
+
+    WHILE POSITION('<ns2:phoneNumbers', phoneStr) > 0 DO
+
+        -- Locate phoneNumbers block
+        SET startPos = POSITION('<ns2:phoneNumbers', phoneStr);
+        SET endPos   = POSITION('</ns2:phoneNumbers>', phoneStr)
+                       + LENGTH('</ns2:phoneNumbers>');
+
+        DECLARE phoneBlock CHARACTER SUBSTRING(phoneStr FROM startPos FOR (endPos - startPos));
+
+        -- Extract typeCode
+        DECLARE typeCode CHARACTER
+            SUBSTRING(
+                phoneBlock
+                FROM POSITION('typeCode="', phoneBlock) + LENGTH('typeCode="')
+                FOR POSITION('"', phoneBlock,
+                    POSITION('typeCode="', phoneBlock) + LENGTH('typeCode="')
+                ) - (POSITION('typeCode="', phoneBlock) + LENGTH('typeCode="'))
+            );
+
+        -- Extract value
+        DECLARE phoneValue CHARACTER
+            SUBSTRING(
+                phoneBlock
+                FROM POSITION('<ns2:value>', phoneBlock) + LENGTH('<ns2:value>')
+                FOR POSITION('</ns2:value>', phoneBlock)
+                    - (POSITION('<ns2:value>', phoneBlock) + LENGTH('<ns2:value>'))
+            );
+
+        -- Build JSON
+        CREATE FIELD OutputRoot.JSON.Data.phoneNumbers[idx];
+        SET OutputRoot.JSON.Data.phoneNumbers[idx].typeCode = typeCode;
+        SET OutputRoot.JSON.Data.phoneNumbers[idx].value    = phoneValue;
+
+        SET idx = idx + 1;
+
+        -- Remove processed block
+        SET phoneStr = SUBSTRING(phoneStr FROM endPos + 1);
+
+    END WHILE;
+
+    RETURN TRUE;
+END;
+END MODULE;
+
+
+
+
+
+
+
+
+
+
+
+
 package crypto;
 
 import javax.crypto.*;
