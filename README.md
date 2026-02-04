@@ -1,3 +1,91 @@
+CREATE COMPUTE MODULE ParseDynamicCardActivation
+CREATE FUNCTION Main() RETURNS BOOLEAN
+BEGIN
+    DECLARE respStr CHARACTER Env.Res;
+    DECLARE startPos INTEGER 1;
+    DECLARE idx INTEGER 1;
+
+    CREATE LASTCHILD OF OutputRoot DOMAIN 'JSON';
+    CREATE FIELD OutputRoot.JSON.Data.cardActivationResult[];
+
+    WHILE POSITION('<ns2:cardActivationResult>', respStr, startPos) > 0 DO
+
+        DECLARE blockStart INTEGER
+            POSITION('<ns2:cardActivationResult>', respStr, startPos);
+
+        DECLARE blockEnd INTEGER
+            POSITION('</ns2:cardActivationResult>', respStr, blockStart);
+
+        DECLARE blockStr CHARACTER
+            SUBSTRING(
+                respStr
+                FROM blockStart
+                FOR blockEnd - blockStart
+            );
+
+        /* ---- reasonCode ---- */
+        DECLARE reasonCodePart CHARACTER
+            SUBSTRING(
+                blockStr
+                FROM POSITION('<reasonCode>', blockStr) + LENGTH('<reasonCode>')
+            );
+
+        SET OutputRoot.JSON.Data.cardActivationResult[idx].reasonCode =
+            SUBSTRING(
+                reasonCodePart
+                FROM 1
+                FOR POSITION('</reasonCode>', reasonCodePart) - 1
+            );
+
+        /* ---- reasonDescription ---- */
+        DECLARE reasonDescPart CHARACTER
+            SUBSTRING(
+                blockStr
+                FROM POSITION('<reasonDescription>', blockStr) + LENGTH('<reasonDescription>')
+            );
+
+        SET OutputRoot.JSON.Data.cardActivationResult[idx].reasonDescription =
+            SUBSTRING(
+                reasonDescPart
+                FROM 1
+                FOR POSITION('</reasonDescription>', reasonDescPart) - 1
+            );
+
+        /* ---- cardNumber ---- */
+        DECLARE cardNumPart CHARACTER
+            SUBSTRING(
+                blockStr
+                FROM POSITION('<ns2:cardNumber>', blockStr) + LENGTH('<ns2:cardNumber>')
+            );
+
+        SET OutputRoot.JSON.Data.cardActivationResult[idx].cardNumber =
+            SUBSTRING(
+                cardNumPart
+                FROM 1
+                FOR POSITION('</ns2:cardNumber>', cardNumPart) - 1
+            );
+
+        /* ---- move forward ---- */
+        SET startPos = blockEnd + LENGTH('</ns2:cardActivationResult>');
+        SET idx = idx + 1;
+
+    END WHILE;
+
+    RETURN TRUE;
+END;
+END MODULE;
+
+
+
+
+
+
+
+
+
+
+
+
 CREATE COMPUTE MODULE ParsePhoneNumbers_String_JSON
 CREATE FUNCTION Main() RETURNS BOOLEAN
 BEGIN
