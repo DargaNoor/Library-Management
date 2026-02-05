@@ -1,3 +1,44 @@
+CREATE COMPUTE MODULE ParseDynamicAddressLines
+CREATE FUNCTION Main() RETURNS BOOLEAN
+BEGIN
+    DECLARE respStr CHARACTER Env.Res;  -- full response string
+    DECLARE startPos INTEGER 1;
+    DECLARE idx INTEGER 1;
+
+    CREATE LASTCHILD OF OutputRoot DOMAIN 'JSON';
+    CREATE FIELD OutputRoot.JSON.Data.addressLines[];
+
+    WHILE POSITION('<ns2:addressLine>', respStr, startPos) > 0 DO
+
+        DECLARE tagStart INTEGER
+            POSITION('<ns2:addressLine>', respStr, startPos);
+
+        DECLARE valueStart INTEGER
+            tagStart + LENGTH('<ns2:addressLine>');
+
+        DECLARE tagEnd INTEGER
+            POSITION('</ns2:addressLine>', respStr, valueStart);
+
+        SET OutputRoot.JSON.Data.addressLines[idx] =
+            SUBSTRING(respStr FROM valueStart FOR tagEnd - valueStart);
+
+        SET startPos = tagEnd + LENGTH('</ns2:addressLine>');
+        SET idx = idx + 1;
+
+    END WHILE;
+
+    RETURN TRUE;
+END;
+END MODULE;
+
+
+
+
+
+
+
+
+
 CREATE COMPUTE MODULE ParseDynamicCardActivation
 CREATE FUNCTION Main() RETURNS BOOLEAN
 BEGIN
