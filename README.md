@@ -1,3 +1,75 @@
+CREATE COMPUTE MODULE ParseDynamicAdditionalAssistance
+CREATE FUNCTION Main() RETURNS BOOLEAN
+BEGIN
+    DECLARE respStr CHARACTER Env.Res;
+    DECLARE startPos INTEGER 1;
+    DECLARE idx INTEGER 1;
+
+    CREATE LASTCHILD OF OutputRoot DOMAIN 'JSON';
+    CREATE FIELD OutputRoot.JSON.Data.additionalAssistanceList[];
+
+    WHILE POSITION('<ns2:additionalAssistance>', respStr, startPos) > 0 DO
+
+        DECLARE blockStart INTEGER
+            POSITION('<ns2:additionalAssistance>', respStr, startPos);
+
+        DECLARE blockEnd INTEGER
+            POSITION('</ns2:additionalAssistance>', respStr, blockStart);
+
+        DECLARE blockStr CHARACTER
+            SUBSTRING(
+                respStr
+                FROM blockStart
+                FOR blockEnd - blockStart
+            );
+
+        /* ---- Code ---- */
+        DECLARE codePart CHARACTER
+            SUBSTRING(
+                blockStr
+                FROM POSITION('<ns2:additionalAssistanceCode>', blockStr)
+                     + LENGTH('<ns2:additionalAssistanceCode>')
+            );
+
+        SET OutputRoot.JSON.Data.additionalAssistanceList[idx].code =
+            SUBSTRING(
+                codePart
+                FROM 1
+                FOR POSITION('</ns2:additionalAssistanceCode>', codePart) - 1
+            );
+
+        /* ---- Comment ---- */
+        DECLARE commentPart CHARACTER
+            SUBSTRING(
+                blockStr
+                FROM POSITION('<ns2:additionalAssistanceComment>', blockStr)
+                     + LENGTH('<ns2:additionalAssistanceComment>')
+            );
+
+        SET OutputRoot.JSON.Data.additionalAssistanceList[idx].comment =
+            SUBSTRING(
+                commentPart
+                FROM 1
+                FOR POSITION('</ns2:additionalAssistanceComment>', commentPart) - 1
+            );
+
+        /* ---- move pointer ---- */
+        SET startPos = blockEnd + LENGTH('</ns2:additionalAssistance>');
+        SET idx = idx + 1;
+
+    END WHILE;
+
+    RETURN TRUE;
+END;
+END MODULE;
+
+
+
+
+
+
+
+
 CREATE COMPUTE MODULE ParseDynamicAddressLines
 CREATE FUNCTION Main() RETURNS BOOLEAN
 BEGIN
