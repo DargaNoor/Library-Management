@@ -1,3 +1,62 @@
+import com.ibm.broker.javacompute.MbJavaComputeNode;
+import com.ibm.broker.plugin.*;
+
+import com.ibm.mq.*;
+
+public class CheckQueueDepth extends MbJavaComputeNode {
+
+    public void evaluate(MbMessageAssembly inAssembly) throws MbException {
+
+        try {
+
+            String qmgrName = "QM_EKYC_SYS";
+            String queueName = "EIS_RETRY_TO_EKYC";
+
+            MQQueueManager qMgr = new MQQueueManager(qmgrName);
+
+            int openOptions = MQConstants.MQOO_INQUIRE;
+            MQQueue queue = qMgr.accessQueue(queueName, openOptions);
+
+            int depth = queue.getCurrentDepth();
+
+            MbMessage outMessage = new MbMessage(inAssembly.getMessage());
+            MbMessageAssembly outAssembly = new MbMessageAssembly(inAssembly, outMessage);
+
+            outAssembly.getLocalEnvironment()
+                       .getRootElement()
+                       .createElementAsLastChild(MbElement.TYPE_NAME_VALUE,
+                               "QueueDepth", depth);
+
+            queue.close();
+            qMgr.disconnect();
+
+            propagate(outAssembly);
+
+        } catch (Exception e) {
+            throw new MbUserException(this, "evaluate()", "", "", e.toString(), null);
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 CREATE COMPUTE MODULE ParseDynamicAdditionalAssistance
 CREATE FUNCTION Main() RETURNS BOOLEAN
 BEGIN
