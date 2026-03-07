@@ -1,3 +1,105 @@
+var startTime = Date.now();
+
+addEvent("rsa_decrypt_start", {
+   algorithm: "RSA",
+   xslt_file: options.location
+});
+
+transform.xslt(options, function(error, nodelist, abortinfo) {
+
+    var elapsed = Date.now() - startTime;
+
+    addEvent("rsa_decrypt_completed", {
+        duration_ms: elapsed
+    });
+
+    addAttribute("rsa.decrypt.time_ms", elapsed);
+
+    if (error) {
+
+        addEvent("rsa_decrypt_failed", {
+            error_message: error.toString(),
+            xslt_file: options.location
+        });
+
+        addAttribute("error", true);
+        addAttribute("error.type", "rsa_decryption_error");
+
+        console.error("RSA decryption failed");
+
+        session.output.write("RSA decryption error");
+
+        return;
+    }
+
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+try {
+
+   // RSA processing code
+
+}
+catch(e) {
+
+   addEvent("exception", {
+      exception_type: "GatewayScriptException",
+      exception_message: e.message,
+      stacktrace: e.stack
+   });
+
+   addAttribute("error", true);
+
+   throw e;
+}
+
+
+
+
+
+
+
+
+
+var apim = require('apim');
+var span = apim.getcontext('otel.span');
+
+function addEvent(name, attrs) {
+    if (span) {
+        span.addEvent(name, attrs || {});
+    }
+}
+
+function addAttribute(key, value) {
+    if (span) {
+        span.setAttribute(key, value);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
 var apim = require('apim');
 var otel = apim.otel;
 
