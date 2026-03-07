@@ -16,6 +16,81 @@ otel.addEvent("rsa-validation-success", {
 
 
 
+var apim = require('apim');
+var otel = apim.otel;
+var crypto = require('crypto');
+
+var startTime = Date.now();
+
+otel.addEvent("rsa-validation-start", {
+   algorithm: "RSA",
+   keySize: "2048"
+});
+
+try {
+
+   var encrypted = context.get('request.headers.rsa-data');
+
+   // Example RSA processing
+   var decrypted = crypto.privateDecrypt(privateKey, Buffer.from(encrypted,'base64'));
+
+   var latency = Date.now() - startTime;
+
+   otel.addEvent("rsa-validation-success", {
+       latency: latency
+   });
+
+} catch(e) {
+
+   otel.addEvent("rsa-validation-failed", {
+       error: e.message
+   });
+
+   throw e;
+}
+
+
+
+
+
+var apim = require('apim');
+var otel = apim.otel;
+
+var start = Date.now();
+
+otel.addEvent("rsa-start");
+
+
+// your RSA validation logic
+
+
+var latency = Date.now() - start;
+
+otel.addEvent("rsa-finished", {
+    latency: latency
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 import com.ibm.broker.javacompute.MbJavaComputeNode;
 import com.ibm.broker.plugin.*;
