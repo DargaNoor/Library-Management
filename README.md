@@ -1,3 +1,22 @@
+var apim = require('apim');
+var otel = apim.otel;
+
+otel.addEvent("rsa-validation-start", {
+   algorithm: "RSA",
+   keySize: "2048"
+});
+
+
+
+
+otel.addEvent("rsa-validation-success", {
+   latency: 8
+});
+
+
+
+
+
 import com.ibm.broker.javacompute.MbJavaComputeNode;
 import com.ibm.broker.plugin.*;
 
