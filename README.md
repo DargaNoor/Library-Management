@@ -1,3 +1,11 @@
+String jws = JWSGenerator.generateJWS("mysecret123456789");
+
+String jwe = JWEEncryptor.encryptJWS(jws, publicKey);
+
+System.out.println(jwe);
+
+
+
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.*;
 import com.nimbusds.jose.jwk.*;
