@@ -1,4 +1,12 @@
-var apim = require('apim');
+function base64UrlDecode(input) {
+    input = input.replace(/-/g, '+').replace(/_/g, '/');
+    
+    while (input.length % 4) {
+        input += '=';
+    }
+
+    return new Buffer(input, 'base64');
+}var apim = require('apim');
 var jose = require('jose');
 
 var inputToken = apim.getvariable('request.body');
