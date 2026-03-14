@@ -1,3 +1,38 @@
+var apim = require('apim');
+var jose = require('jose');
+
+var inputToken = apim.getvariable('request.body');
+
+if (!inputToken) {
+    throw new Error("JWE token missing in request body");
+}
+
+// decrypt JWE using EC private key stored in DataPower
+var decryptOptions = {
+    "key": "name:ec-keypair",   // Crypto Key Pair object in DataPower
+    "algorithms": ["ECDH-ES"],
+    "enc": ["A256GCM"]
+};
+
+jose.jwe.decrypt(inputToken, decryptOptions, function(error, result) {
+
+    if (error) {
+        console.error("JWE Decrypt failed:", error);
+        apim.setvariable('error.message', error.message);
+        throw error;
+    }
+
+    // decrypted payload should be JWS
+    var jwsToken = result.payload;
+
+    console.info("Decrypted JWS:", jwsToken);
+
+    apim.setvariable("decrypted.jws", jwsToken);
+});
+
+
+
+
 var crypto = require('crypto');
 var session = require('session');
 
