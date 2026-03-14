@@ -1,3 +1,42 @@
+import com.nimbusds.jose.*;
+import com.nimbusds.jose.crypto.*;
+
+public static String encryptJWS(String jwsToken, ECKey ecKey)
+        throws Exception {
+
+    JWEHeader header = new JWEHeader.Builder(
+            JWEAlgorithm.ECDH_ES,
+            EncryptionMethod.A256GCM)
+            .build();
+
+    JWEObject jweObject =
+            new JWEObject(header, new Payload(jwsToken));
+
+    ECDHEncrypter encrypter =
+            new ECDHEncrypter(ecKey);
+
+    jweObject.encrypt(encrypter);
+
+    return jweObject.serialize();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import com.nimbusds.jose.jwk.ECKey;
 import java.security.interfaces.ECPublicKey;
 
