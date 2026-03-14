@@ -1,3 +1,27 @@
+import com.nimbusds.jose.jwk.ECKey;
+import java.security.interfaces.ECPublicKey;
+
+ECPublicKey ecPublicKey = (ECPublicKey) publicKey;
+
+ECKey ecKey = new ECKey.Builder(
+        com.nimbusds.jose.jwk.Curve.P_256,
+        ecPublicKey
+).build();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 String jws = JWSGenerator.generateJWS("mysecret123456789");
 
 String jwe = JWEEncryptor.encryptJWS(jws, publicKey);
