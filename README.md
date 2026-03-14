@@ -1,3 +1,96 @@
+var crypto = require('crypto');
+var session = require('session');
+
+session.input.readAsBuffer(function(error, data){
+
+    if(error){
+        session.reject("Input read error");
+        return;
+    }
+
+    var token = data.toString().trim();
+
+    /* ------------------------
+       STEP 1 : JWE Decryption
+    -------------------------*/
+
+    var jweParts = token.split('.');
+
+    if(jweParts.length != 5){
+        session.reject("Invalid JWE token");
+        return;
+    }
+
+    var protectedHeader = jweParts[0];
+    var encryptedKey = jweParts[1];
+    var iv = jweParts[2];
+    var cipherText = jweParts[3];
+    var authTag = jweParts[4];
+
+    var privateKey = crypto.loadKey("name:ec_private_key");
+
+    var decrypted = crypto.decrypt({
+
+        alg: "ECDH-ES",
+        enc: "A256GCM",
+
+        header: protectedHeader,
+        encryptedKey: encryptedKey,
+        iv: iv,
+        ciphertext: cipherText,
+        tag: authTag,
+
+        key: privateKey
+
+    });
+
+    /* ------------------------
+       STEP 2 : JWS Validation
+    -------------------------*/
+
+    var jwsToken = decrypted.toString();
+
+    var jwsParts = jwsToken.split('.');
+
+    if(jwsParts.length != 3){
+        session.reject("Invalid JWS token");
+        return;
+    }
+
+    var header = jwsParts[0];
+    var payload = jwsParts[1];
+    var signature = jwsParts[2];
+
+    var signingInput = header + "." + payload;
+
+    var secretKey = "111111111111111111111111111111";
+
+    var verified = crypto.verify(
+        "HS256",
+        signingInput,
+        signature,
+        secretKey
+    );
+
+    if(!verified){
+        session.reject("Invalid JWS Signature");
+        return;
+    }
+
+    /* ------------------------
+       STEP 3 : Decode Payload
+    -------------------------*/
+
+    var decodedPayload =
+        Buffer.from(payload,'base64').toString();
+
+    session.output.write(decodedPayload);
+
+});
+
+
+
+
 import java.io.FileInputStream;
 import java.security.PublicKey;
 import java.security.cert.CertificateFactory;
