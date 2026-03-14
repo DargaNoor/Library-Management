@@ -1,3 +1,62 @@
+var session = require('session');
+var crypto = require('crypto');
+
+function base64UrlDecode(input) {
+    input = input.replace(/-/g, '+').replace(/_/g, '/');
+    while (input.length % 4) {
+        input += '=';
+    }
+    return Buffer.from(input, 'base64');
+}
+
+session.input.readAsBuffer(function(error, buffer) {
+
+    if (error) {
+        session.reject("Read Error");
+        return;
+    }
+
+    var jwe = buffer.toString();
+
+    var parts = jwe.split('.');
+
+    var headerB64 = parts[0];
+    var encryptedKey = parts[1];   // empty for ECDH-ES
+    var ivB64 = parts[2];
+    var cipherB64 = parts[3];
+    var tagB64 = parts[4];
+
+    var header = JSON.parse(base64UrlDecode(headerB64).toString());
+
+    var iv = base64UrlDecode(ivB64);
+    var ciphertext = base64UrlDecode(cipherB64);
+    var authTag = base64UrlDecode(tagB64);
+
+    /* 
+       Replace this with the derived DEK if you are doing full ECDH
+       For now assuming 32 byte key already derived/shared
+    */
+    var sharedKey = Buffer.from("01234567890123456789012345678901");
+
+    var decipher = crypto.createDecipheriv("aes-256-gcm", sharedKey, iv);
+
+    decipher.setAuthTag(authTag);
+
+    var decrypted = Buffer.concat([
+        decipher.update(ciphertext),
+        decipher.final()
+    ]);
+
+    session.output.write(decrypted.toString());
+
+});
+
+
+
+
+
+
+
 function base64UrlDecode(input) {
     input = input.replace(/-/g, '+').replace(/_/g, '/');
     
