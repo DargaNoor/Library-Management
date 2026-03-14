@@ -1,5 +1,64 @@
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.*;
+import com.nimbusds.jose.jwk.*;
+
+public class JWEEncryptor {
+
+    public static String encryptJWS(String jwsToken, String publicKeyJson) throws Exception {
+
+        JWK jwk = JWK.parse(publicKeyJson);
+
+        ECKey ecPublicKey = (ECKey) jwk;
+
+        JWEHeader header = new JWEHeader.Builder(
+                JWEAlgorithm.ECDH_ES,
+                EncryptionMethod.A256GCM)
+                .ephemeralPublicKey(ecPublicKey)
+                .build();
+
+        Payload payload = new Payload(jwsToken);
+
+        JWEObject jweObject = new JWEObject(header, payload);
+
+        ECDHEncrypter encrypter =
+                new ECDHEncrypter(ecPublicKey);
+
+        jweObject.encrypt(encrypter);
+
+        return jweObject.serialize();
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import com.nimbusds.jose.*;
+import com.nimbusds.jose.crypto.*;
 import com.nimbusds.jose.util.Base64URL;
 
 import java.util.*;
