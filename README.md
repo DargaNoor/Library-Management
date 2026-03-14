@@ -1,3 +1,28 @@
+import java.io.FileInputStream;
+import java.security.PublicKey;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+
+public static PublicKey loadPublicKey(String certPath) throws Exception {
+
+    FileInputStream fis = new FileInputStream(certPath);
+
+    CertificateFactory cf = CertificateFactory.getInstance("X.509");
+
+    X509Certificate cert =
+            (X509Certificate) cf.generateCertificate(fis);
+
+    return cert.getPublicKey();
+}
+
+
+
+
+
+
+
+
+
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.*;
 
