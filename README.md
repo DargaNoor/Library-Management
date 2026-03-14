@@ -1,3 +1,67 @@
+import com.nimbusds.jose.*;
+import com.nimbusds.jose.crypto.*;
+import com.nimbusds.jose.util.Base64URL;
+
+import java.util.*;
+
+public class JWSGenerator {
+
+    public static String generateJWS(String secretKey) throws Exception {
+
+        // Header
+        JWSHeader header = new JWSHeader.Builder(JWSAlgorithm.HS256)
+                .keyID("keyId")
+                .type(JOSEObjectType.JWT)
+                .build();
+
+        // Payload
+        String payloadJson =
+                "{"
+                + "\"mobileNumber\":\"1234567890\","
+                + "\"dob\":\"1990-01-01\","
+                + "\"sessionId\":\"randomUUID\""
+                + "}";
+
+        Payload payload = new Payload(payloadJson);
+
+        JWSObject jwsObject = new JWSObject(header, payload);
+
+        JWSSigner signer = new MACSigner(secretKey.getBytes());
+
+        jwsObject.sign(signer);
+
+        return jwsObject.serialize();
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 var startTime = Date.now();
 
 addEvent("rsa_decrypt_start", {
