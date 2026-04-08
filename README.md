@@ -2,6 +2,191 @@ package com.crypto;
 
 import java.security.*;
 import java.security.spec.*;
+import java.security.cert.*;
+import java.util.*;
+import java.io.*;
+
+import javax.crypto.*;
+import javax.crypto.spec.*;
+
+import java.util.Base64;
+
+public class CKYCFullFlow {
+
+    // =========================
+    // 🔐 Load Private Key (PKCS8 Base64)
+    // =========================
+    public static PrivateKey getPrivateKey(String base64Key) throws Exception {
+
+        base64Key = base64Key.replaceAll("\\s", "");
+        byte[] decoded = Base64.getDecoder().decode(base64Key);
+
+        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(decoded);
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+
+        return kf.generatePrivate(spec);
+    }
+
+    // =========================
+    // 🔓 Load Public Key from Base64 Cert
+    // =========================
+    public static PublicKey getPublicKey(String base64Cert) throws Exception {
+
+        byte[] certBytes = Base64.getDecoder().decode(base64Cert);
+
+        CertificateFactory cf = CertificateFactory.getInstance("X.509");
+        X509Certificate cert = (X509Certificate)
+                cf.generateCertificate(new ByteArrayInputStream(certBytes));
+
+        return cert.getPublicKey();
+    }
+
+    // =========================
+    // 🔐 AES-GCM Encrypt (with TAG separation)
+    // =========================
+    public static Map<String, byte[]> aesEncrypt(String payload) throws Exception {
+
+        KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+        keyGen.init(256);
+        SecretKey aesKey = keyGen.generateKey();
+
+        byte[] iv = new byte[12];
+        new SecureRandom().nextBytes(iv);
+
+        Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+
+        GCMParameterSpec spec = new GCMParameterSpec(128, iv);
+        cipher.init(Cipher.ENCRYPT_MODE, aesKey, spec);
+
+        byte[] encrypted = cipher.doFinal(payload.getBytes("UTF-8"));
+
+        // 🔥 Split cipher + tag
+        int tagLength = 16;
+
+        byte[] cipherText = Arrays.copyOfRange(encrypted, 0, encrypted.length - tagLength);
+        byte[] tag = Arrays.copyOfRange(encrypted, encrypted.length - tagLength, encrypted.length);
+
+        Map<String, byte[]> map = new HashMap<>();
+        map.put("key", aesKey.getEncoded());
+        map.put("iv", iv);
+        map.put("cipher", cipherText);
+        map.put("tag", tag);
+
+        return map;
+    }
+
+    // =========================
+    // 🔐 Encrypt AES Key using RSA-OAEP-256
+    // =========================
+    public static byte[] encryptAESKey(byte[] aesKey, PublicKey publicKey) throws Exception {
+
+        Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-256AndMGF1Padding");
+        cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+
+        return cipher.doFinal(aesKey);
+    }
+
+    // =========================
+    // 🔐 Create JWE
+    // =========================
+    public static String createJWE(String payload, String base64Cert) throws Exception {
+
+        PublicKey publicKey = getPublicKey(base64Cert);
+
+        Map<String, byte[]> aes = aesEncrypt(payload);
+
+        byte[] encKey = encryptAESKey(aes.get("key"), publicKey);
+
+        Base64.Encoder urlEncoder = Base64.getUrlEncoder().withoutPadding();
+
+        String header = urlEncoder.encodeToString(
+                "{\"alg\":\"RSA-OAEP-256\",\"enc\":\"A256GCM\"}".getBytes()
+        );
+
+        String encryptedKey = urlEncoder.encodeToString(encKey);
+        String iv = urlEncoder.encodeToString(aes.get("iv"));
+        String cipher = urlEncoder.encodeToString(aes.get("cipher"));
+        String tag = urlEncoder.encodeToString(aes.get("tag"));
+
+        return header + "." + encryptedKey + "." + iv + "." + cipher + "." + tag;
+    }
+
+    // =========================
+    // ✍️ Create JWS (RS256)
+    // =========================
+    public static String signJWS(String jwe, String base64PrivateKey) throws Exception {
+
+        PrivateKey privateKey = getPrivateKey(base64PrivateKey);
+
+        Base64.Encoder urlEncoder = Base64.getUrlEncoder().withoutPadding();
+
+        String header = urlEncoder.encodeToString("{\"alg\":\"RS256\"}".getBytes());
+        String payload = urlEncoder.encodeToString(jwe.getBytes());
+
+        String signingInput = header + "." + payload;
+
+        Signature signature = Signature.getInstance("SHA256withRSA");
+        signature.initSign(privateKey);
+        signature.update(signingInput.getBytes());
+
+        byte[] signed = signature.sign();
+
+        String sig = urlEncoder.encodeToString(signed);
+
+        return signingInput + "." + sig;
+    }
+
+    // =========================
+    // 🚀 FINAL METHOD
+    // =========================
+    public static String generateCKYCRequest(
+            String jsonPayload,
+            String base64Cert,
+            String base64PrivateKey) throws Exception {
+
+        String jwe = createJWE(jsonPayload, base64Cert);
+
+        return signJWS(jwe, base64PrivateKey);
+    }
+
+    // =========================
+    // 🧪 MAIN METHOD (TESTING)
+    // =========================
+    public static void main(String[] args) throws Exception {
+
+        String payload = "{\"name\":\"Noor\",\"id\":\"123\"}";
+
+        String privateKey = "PASTE_BASE64_PRIVATE_KEY_HERE";
+        String publicCert = "PASTE_BASE64_CERT_HERE";
+
+        String result = generateCKYCRequest(payload, publicCert, privateKey);
+
+        System.out.println("FINAL JWS:");
+        System.out.println(result);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+package com.crypto;
+
+import java.security.*;
+import java.security.spec.*;
 import java.util.Base64;
 
 public class CryptoUtil {
