@@ -1,3 +1,67 @@
+package com.crypto;
+
+import java.security.*;
+import java.security.spec.*;
+import java.util.Base64;
+
+public class CryptoUtil {
+
+    // 🔐 Convert Base64 PKCS8 → PrivateKey
+    public static PrivateKey getPrivateKey(String base64Key) throws Exception {
+
+        // Remove spaces/newlines
+        base64Key = base64Key.replaceAll("\\s", "");
+
+        byte[] decoded = Base64.getDecoder().decode(base64Key);
+
+        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(decoded);
+
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+
+        return kf.generatePrivate(spec);
+    }
+
+    // ✍️ Sign data using SHA256withRSA
+    public static String signData(String data, String base64Key) throws Exception {
+
+        PrivateKey privateKey = getPrivateKey(base64Key);
+
+        Signature signature = Signature.getInstance("SHA256withRSA");
+        signature.initSign(privateKey);
+        signature.update(data.getBytes("UTF-8"));
+
+        byte[] signedBytes = signature.sign();
+
+        return Base64.getEncoder().encodeToString(signedBytes);
+    }
+
+    // 🔓 Decrypt using RSA
+    public static String decryptData(String encryptedBase64, String base64Key) throws Exception {
+
+        PrivateKey privateKey = getPrivateKey(base64Key);
+
+        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        cipher.init(Cipher.DECRYPT_MODE, privateKey);
+
+        byte[] encryptedBytes = Base64.getDecoder().decode(encryptedBase64);
+
+        byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
+
+        return new String(decryptedBytes, "UTF-8");
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
 var session = require('session');
 var crypto = require('crypto');
 
