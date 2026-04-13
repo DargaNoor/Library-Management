@@ -1,3 +1,34 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            targetNamespace="http://example.com/employee"
+            xmlns="http://example.com/employee"
+            elementFormDefault="qualified">
+
+    <xsd:element name="Employees">
+        <xsd:complexType>
+            <xsd:sequence>
+
+                <xsd:element name="Employee" maxOccurs="unbounded">
+                    <xsd:complexType>
+                        <xsd:sequence>
+
+                            <xsd:element name="EmpID" type="xsd:int"/>
+                            <xsd:element name="EmpName" type="xsd:string"/>
+                            <xsd:element name="EmpSalary" type="xsd:int"/>
+
+                        </xsd:sequence>
+                    </xsd:complexType>
+                </xsd:element>
+
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+</xsd:schema>
+
+
+
+
+
 package com.crypto;
 
 import java.security.*;
