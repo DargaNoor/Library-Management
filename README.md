@@ -1,4 +1,60 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:dfdl="http://www.ogf.org/dfdl/dfdl-1.0/">
+
+    <!-- ROOT -->
+    <xsd:element name="ctx1">
+        <xsd:complexType>
+            <xsd:sequence>
+
+                <!-- RECORD ARRAY -->
+                <xsd:element name="record" maxOccurs="unbounded">
+                    <xsd:complexType>
+
+                        <!-- FIELDS -->
+                        <xsd:sequence dfdl:separator=",">
+
+                            <xsd:element name="id" type="xsd:string"/>
+                            <xsd:element name="name" type="xsd:string"/>
+                            <xsd:element name="salary" type="xsd:string"/>
+
+                        </xsd:sequence>
+
+                    </xsd:complexType>
+
+                    <!-- NEW LINE SEPARATOR BETWEEN RECORDS -->
+                    <xsd:annotation>
+                        <xsd:appinfo source="http://www.ogf.org/dfdl/">
+                            <dfdl:property name="separator" value="%CR;%LF;"/>
+                        </xsd:appinfo>
+                    </xsd:annotation>
+
+                </xsd:element>
+
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+</xsd:schema>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
             targetNamespace="http://example.com/employee"
             xmlns="http://example.com/employee"
             elementFormDefault="qualified">
