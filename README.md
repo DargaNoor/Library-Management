@@ -1,3 +1,55 @@
+// Read input JSON
+var input = session.input.readAsJSON();
+
+// Extract parameters object
+var params = input.parameters;
+
+// Function to convert JSON to query string
+function toQueryString(obj) {
+    var query = '';
+
+    for (var key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            var value = obj[key];
+
+            // Handle null/undefined
+            if (value === null || value === undefined) {
+                value = '';
+            }
+
+            // Encode key and value
+            query += encodeURIComponent(key) + '=' + encodeURIComponent(value) + '&';
+        }
+    }
+
+    // Remove trailing &
+    if (query.endsWith('&')) {
+        query = query.slice(0, -1);
+    }
+
+    return query;
+}
+
+// Generate query string
+var queryString = toQueryString(params);
+
+// Optional: prepend ?
+if (queryString !== '') {
+    queryString = '?' + queryString;
+}
+
+// Set output
+session.output.write(queryString);
+
+
+
+
+
+
+
+
+
+
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
             xmlns:dfdl="http://www.ogf.org/dfdl/dfdl-1.0/">
 
