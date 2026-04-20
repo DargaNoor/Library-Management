@@ -1,3 +1,56 @@
+session.output.write("Routing...");
+
+var name = session.input.readAsXML().getElementsByTagName("name")[0].textContent;
+
+if(name === "Noor") {
+    session.variables.set("var://service/routing-url", "http://localhost:7800/service1");
+} else {
+    session.variables.set("var://service/routing-url", "http://localhost:7800/serviceAlt");
+}
+
+
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+   <soapenv:Body>
+      <Request>
+         <name>Noor</name>
+      </Request>
+   </soapenv:Body>
+</soapenv:Envelope>
+
+
+
+
+
+
+
+curl -k https://localhost:9443/mainService \
+-H "Content-Type: text/xml" \
+-d @request.xml
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Read input JSON
 var input = session.input.readAsJSON();
 
