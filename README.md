@@ -1,3 +1,82 @@
+<definitions name="TestService"
+ targetNamespace="http://example.com/test"
+ xmlns:tns="http://example.com/test"
+ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+ xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+ xmlns="http://schemas.xmlsoap.org/wsdl/">
+
+ <types>
+  <xsd:schema targetNamespace="http://example.com/test">
+    <xsd:element name="Request">
+      <xsd:complexType>
+        <xsd:sequence>
+          <xsd:element name="name" type="xsd:string"/>
+        </xsd:sequence>
+      </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="Response">
+      <xsd:complexType>
+        <xsd:sequence>
+          <xsd:element name="message" type="xsd:string"/>
+        </xsd:sequence>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+ </types>
+
+ <message name="RequestMessage">
+   <part name="parameters" element="tns:Request"/>
+ </message>
+
+ <message name="ResponseMessage">
+   <part name="parameters" element="tns:Response"/>
+ </message>
+
+ <portType name="TestPortType">
+   <operation name="process">
+     <input message="tns:RequestMessage"/>
+     <output message="tns:ResponseMessage"/>
+   </operation>
+ </portType>
+
+ <binding name="TestBinding" type="tns:TestPortType">
+   <soap:binding style="document"
+     transport="http://schemas.xmlsoap.org/soap/http"/>
+   <operation name="process">
+     <soap:operation soapAction="process"/>
+     <input>
+       <soap:body use="literal"/>
+     </input>
+     <output>
+       <soap:body use="literal"/>
+     </output>
+   </operation>
+ </binding>
+
+ <service name="TestService">
+   <port name="TestPort" binding="tns:TestBinding">
+     <soap:address location="http://localhost:555/mainService"/>
+   </port>
+ </service>
+
+</definitions>
+
+
+
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                  xmlns:tns="http://example.com/test">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <tns:Request>
+         <name>Noor</name>
+      </tns:Request>
+   </soapenv:Body>
+</soapenv:Envelope>
+
+
+
+
 session.output.write("Routing...");
 
 var name = session.input.readAsXML().getElementsByTagName("name")[0].textContent;
