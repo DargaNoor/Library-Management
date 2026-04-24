@@ -1,3 +1,42 @@
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+ xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/07/secext"
+ xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+
+ <soapenv:Header>
+  <wsse:Security>
+
+   <wsse:UsernameToken>
+    <wsse:Username>test</wsse:Username>
+    <wsse:Password>test123</wsse:Password>
+   </wsse:UsernameToken>
+
+   <ds:Signature>
+    <ds:SignedInfo>
+     <ds:SignatureMethod Algorithm="rsa-sha256"/>
+    </ds:SignedInfo>
+    <ds:SignatureValue>ABC123...</ds:SignatureValue>
+   </ds:Signature>
+
+  </wsse:Security>
+ </soapenv:Header>
+
+ <soapenv:Body>
+  <Request>
+   <name>Noor</name>
+  </Request>
+ </soapenv:Body>
+
+</soapenv:Envelope>
+
+
+
+
+
+
+
+
+
+
 <definitions name="TestService"
  targetNamespace="http://example.com/test"
  xmlns:tns="http://example.com/test"
