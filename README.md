@@ -1,3 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<soapenv:Envelope
+ xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+ xmlns:tns="http://example.com/test"
+ xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"
+ xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
+
+  <soapenv:Header>
+    <wsse:Security>
+
+      <!-- USERNAME TOKEN -->
+      <wsse:UsernameToken>
+        <wsse:Username>Noor</wsse:Username>
+        <wsse:Password>Nekendura</wsse:Password>
+      </wsse:UsernameToken>
+
+      <!-- IMPORTANT: DO NOT ADD SIGNATURE HERE YET -->
+
+    </wsse:Security>
+  </soapenv:Header>
+
+  <!-- BODY MUST HAVE ID -->
+  <soapenv:Body wsu:Id="body">
+    <tns:Request>
+      <tns:name>Noor</tns:name>
+    </tns:Request>
+  </soapenv:Body>
+
+</soapenv:Envelope>
+
+
+
+
 <definitions name="TestService"
  targetNamespace="http://example.com/test"
  xmlns:tns="http://example.com/test"
