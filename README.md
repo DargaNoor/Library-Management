@@ -1,3 +1,48 @@
+<soapenv:Envelope 
+    xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd"
+    xmlns:tns="http://example.com/test">
+
+    <soapenv:Header>
+        <wsse:Security>
+            <wsse:UsernameToken>
+                <wsse:Username>Noor</wsse:Username>
+                <wsse:Password>Nekendura</wsse:Password>
+            </wsse:UsernameToken>
+        </wsse:Security>
+    </soapenv:Header>
+
+    <soapenv:Body Id="body">
+        <tns:Request>
+            <tns:name>Noor</tns:name>
+        </tns:Request>
+    </soapenv:Body>
+
+</soapenv:Envelope>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import java.io.FileInputStream;
 import java.security.KeyStore;
 import java.security.PrivateKey;
