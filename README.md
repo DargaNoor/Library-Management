@@ -1,3 +1,122 @@
+import java.io.FileInputStream;
+import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.cert.X509Certificate;
+import java.util.Collections;
+
+import javax.xml.crypto.dsig.*;
+import javax.xml.crypto.dsig.dom.DOMSignContext;
+import javax.xml.crypto.dsig.keyinfo.*;
+import javax.xml.crypto.dsig.spec.*;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.*;
+
+public class SimpleSoapSigner {
+
+    public static void main(String[] args) throws Exception {
+
+        // 🔴 STEP 1: Load PKCS12
+        KeyStore ks = KeyStore.getInstance("PKCS12");
+        ks.load(new FileInputStream("client.p12"), "password".toCharArray());
+
+        String alias = ks.aliases().nextElement();
+
+        PrivateKey privateKey = (PrivateKey) ks.getKey(alias, "password".toCharArray());
+        X509Certificate cert = (X509Certificate) ks.getCertificate(alias);
+
+        // 🔴 STEP 2: Load SOAP XML
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        dbf.setNamespaceAware(true);
+
+        Document doc = dbf.newDocumentBuilder()
+                .parse(new FileInputStream("input.xml"));
+
+        // 🔴 STEP 3: Get SOAP Body
+        NodeList bodyList = doc.getElementsByTagNameNS(
+                "http://schemas.xmlsoap.org/soap/envelope/",
+                "Body");
+
+        Element body = (Element) bodyList.item(0);
+
+        // 🔴 STEP 4: Set ID (MANDATORY for signing)
+        body.setAttribute("Id", "body");
+        body.setIdAttribute("Id", true);
+
+        // 🔴 STEP 5: Create XML Signature Factory
+        XMLSignatureFactory factory = XMLSignatureFactory.getInstance("DOM");
+
+        // 🔴 STEP 6: Reference (what to sign)
+        Reference ref = factory.newReference(
+                "#body",
+                factory.newDigestMethod(DigestMethod.SHA256, null),
+                Collections.singletonList(
+                        factory.newTransform(Transform.ENVELOPED, (TransformParameterSpec) null)
+                ),
+                null,
+                null
+        );
+
+        // 🔴 STEP 7: Signed Info
+        SignedInfo signedInfo = factory.newSignedInfo(
+                factory.newCanonicalizationMethod(
+                        CanonicalizationMethod.INCLUSIVE,
+                        (C14NMethodParameterSpec) null),
+                factory.newSignatureMethod(SignatureMethod.RSA_SHA256, null),
+                Collections.singletonList(ref)
+        );
+
+        // 🔴 STEP 8: Key Info (certificate)
+        KeyInfoFactory kif = factory.getKeyInfoFactory();
+        X509Data x509Data = kif.newX509Data(Collections.singletonList(cert));
+        KeyInfo keyInfo = kif.newKeyInfo(Collections.singletonList(x509Data));
+
+        // 🔴 STEP 9: Create WS-Security Header
+        NodeList headerList = doc.getElementsByTagNameNS(
+                "http://schemas.xmlsoap.org/soap/envelope/",
+                "Header");
+
+        Element header = (Element) headerList.item(0);
+
+        Element security = doc.createElementNS(
+                "http://schemas.xmlsoap.org/ws/2002/07/secext",
+                "wsse:Security");
+
+        header.appendChild(security);
+
+        // 🔴 STEP 10: Sign context
+        DOMSignContext signContext = new DOMSignContext(privateKey, security);
+
+        // 🔴 STEP 11: Create and sign
+        XMLSignature signature = factory.newXMLSignature(signedInfo, keyInfo);
+        signature.sign(signContext);
+
+        // 🔴 STEP 12: Output signed XML
+        javax.xml.transform.TransformerFactory tf = javax.xml.transform.TransformerFactory.newInstance();
+        javax.xml.transform.Transformer transformer = tf.newTransformer();
+
+        transformer.transform(
+                new javax.xml.transform.dom.DOMSource(doc),
+                new javax.xml.transform.stream.StreamResult(System.out)
+        );
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
  xmlns:wsse="http://schemas.xmlsoap.org/ws/2002/07/secext"
  xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
