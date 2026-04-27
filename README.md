@@ -11,6 +11,103 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.*;
 
+public class SoapSignerSHA1 {
+
+    public static void main(String[] args) throws Exception {
+
+        // 🔹 Load PKCS12
+        KeyStore ks = KeyStore.getInstance("PKCS12");
+        ks.load(new FileInputStream("client.p12"), "password".toCharArray());
+
+        String alias = ks.aliases().nextElement();
+        PrivateKey privateKey = (PrivateKey) ks.getKey(alias, "password".toCharArray());
+        X509Certificate cert = (X509Certificate) ks.getCertificate(alias);
+
+        // 🔹 Load XML
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        dbf.setNamespaceAware(true);
+        Document doc = dbf.newDocumentBuilder().parse(new FileInputStream("input.xml"));
+
+        // 🔹 Get SOAP Body
+        Element body = (Element) doc.getElementsByTagNameNS(
+                "http://schemas.xmlsoap.org/soap/envelope/", "Body").item(0);
+
+        // 🔴 IMPORTANT
+        body.setAttribute("Id", "body");
+        body.setIdAttribute("Id", true);
+
+        // 🔹 Signature factory
+        XMLSignatureFactory factory = XMLSignatureFactory.getInstance("DOM");
+
+        // 🔹 Reference (SHA1)
+        Reference ref = factory.newReference(
+                "#body",
+                factory.newDigestMethod(DigestMethod.SHA1, null),
+                Arrays.asList(
+                        factory.newTransform(Transform.ENVELOPED, (TransformParameterSpec) null),
+                        factory.newTransform(CanonicalizationMethod.INCLUSIVE, (TransformParameterSpec) null)
+                ),
+                null,
+                null
+        );
+
+        // 🔹 SignedInfo (RSA-SHA1)
+        SignedInfo si = factory.newSignedInfo(
+                factory.newCanonicalizationMethod(
+                        CanonicalizationMethod.INCLUSIVE,
+                        (C14NMethodParameterSpec) null),
+                factory.newSignatureMethod(SignatureMethod.RSA_SHA1, null),
+                Collections.singletonList(ref)
+        );
+
+        // 🔹 KeyInfo
+        KeyInfoFactory kif = factory.getKeyInfoFactory();
+        X509Data xd = kif.newX509Data(Collections.singletonList(cert));
+        KeyInfo ki = kif.newKeyInfo(Collections.singletonList(xd));
+
+        // 🔹 Locate wsse:Security
+        Element security = (Element) doc.getElementsByTagNameNS(
+                "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd",
+                "Security").item(0);
+
+        // 🔴 IMPORTANT: attach signature here
+        DOMSignContext signContext = new DOMSignContext(privateKey, security);
+
+        // 🔴 FORCE ds prefix
+        signContext.setDefaultNamespacePrefix("ds");
+
+        XMLSignature signature = factory.newXMLSignature(si, ki);
+        signature.sign(signContext);
+
+        // 🔹 Output
+        javax.xml.transform.TransformerFactory tf = javax.xml.transform.TransformerFactory.newInstance();
+        javax.xml.transform.Transformer t = tf.newTransformer();
+
+        t.transform(new javax.xml.transform.dom.DOMSource(doc),
+                new javax.xml.transform.stream.StreamResult(System.out));
+    }
+}
+
+
+
+
+
+
+
+
+import java.io.FileInputStream;
+import java.security.*;
+import java.security.cert.X509Certificate;
+import java.util.*;
+
+import javax.xml.crypto.dsig.*;
+import javax.xml.crypto.dsig.dom.DOMSignContext;
+import javax.xml.crypto.dsig.keyinfo.*;
+import javax.xml.crypto.dsig.spec.*;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.*;
+
 public class SoapSigner {
 
     public static void main(String[] args) throws Exception {
