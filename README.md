@@ -1,3 +1,100 @@
+import org.w3c.dom.*;
+import javax.xml.parsers.*;
+import javax.xml.crypto.dsig.*;
+import javax.xml.crypto.dsig.dom.*;
+import javax.xml.crypto.dsig.keyinfo.*;
+import javax.xml.crypto.*;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.*;
+import java.security.*;
+import java.security.cert.*;
+import java.util.*;
+
+public class SignSOAP {
+
+    public static void main(String[] args) throws Exception {
+
+        // ===== LOAD XML =====
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        dbf.setNamespaceAware(true);
+        Document doc = dbf.newDocumentBuilder().parse(new File("input.xml"));
+
+        // ===== GET BODY =====
+        NodeList bodyList = doc.getElementsByTagNameNS(
+                "http://schemas.xmlsoap.org/soap/envelope/", "Body");
+        Element body = (Element) bodyList.item(0);
+
+        // IMPORTANT: Mark wsu:Id as ID
+        body.setIdAttributeNS(
+                "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd",
+                "Id", true);
+
+        // ===== LOAD PRIVATE KEY + CERT =====
+        FileInputStream fis = new FileInputStream("client.p12");
+        KeyStore ks = KeyStore.getInstance("PKCS12");
+        ks.load(fis, "password".toCharArray());
+
+        String alias = ks.aliases().nextElement();
+        PrivateKey privateKey = (PrivateKey) ks.getKey(alias, "password".toCharArray());
+        X509Certificate cert = (X509Certificate) ks.getCertificate(alias);
+
+        // ===== SIGNATURE FACTORY =====
+        XMLSignatureFactory fac = XMLSignatureFactory.getInstance("DOM");
+
+        // ===== REFERENCE =====
+        Reference ref = fac.newReference(
+                "#body",
+                fac.newDigestMethod(DigestMethod.SHA1, null),
+                Arrays.asList(
+                        fac.newTransform(Transform.ENVELOPED, (TransformParameterSpec) null),
+                        fac.newTransform(CanonicalizationMethod.INCLUSIVE, (C14NMethodParameterSpec) null)
+                ),
+                null, null);
+
+        // ===== SIGNED INFO =====
+        SignedInfo si = fac.newSignedInfo(
+                fac.newCanonicalizationMethod(
+                        CanonicalizationMethod.INCLUSIVE,
+                        (C14NMethodParameterSpec) null),
+                fac.newSignatureMethod(SignatureMethod.RSA_SHA1, null),
+                Collections.singletonList(ref));
+
+        // ===== KEY INFO =====
+        KeyInfoFactory kif = fac.getKeyInfoFactory();
+        X509Data x509Data = kif.newX509Data(Collections.singletonList(cert));
+        KeyInfo ki = kif.newKeyInfo(Collections.singletonList(x509Data));
+
+        // ===== CREATE SIGNATURE =====
+        XMLSignature signature = fac.newXMLSignature(si, ki);
+
+        // ===== INSERT INTO HEADER =====
+        NodeList securityList = doc.getElementsByTagNameNS(
+                "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd",
+                "Security");
+
+        DOMSignContext dsc = new DOMSignContext(privateKey, securityList.item(0));
+
+        signature.sign(dsc);
+
+        // ===== OUTPUT =====
+        TransformerFactory tf = TransformerFactory.newInstance();
+        Transformer trans = tf.newTransformer();
+        trans.setOutputProperty(OutputKeys.INDENT, "yes");
+
+        trans.transform(new DOMSource(doc), new StreamResult(new File("signed.xml")));
+
+        System.out.println("Signed XML generated: signed.xml");
+    }
+}
+
+
+
+
+
+
+
 <?xml version="1.0" encoding="UTF-8"?>
 
 <soapenv:Envelope
