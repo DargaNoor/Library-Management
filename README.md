@@ -1,3 +1,75 @@
+<definitions name="TestService"
+ targetNamespace="http://example.com/test"
+ xmlns:tns="http://example.com/test"
+ xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+ xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+ xmlns="http://schemas.xmlsoap.org/wsdl/">
+
+ <types>
+  <xsd:schema targetNamespace="http://example.com/test" elementFormDefault="qualified">
+
+    <xsd:element name="Request">
+      <xsd:complexType>
+        <xsd:sequence>
+          <xsd:element name="name" type="xsd:string"/>
+        </xsd:sequence>
+      </xsd:complexType>
+    </xsd:element>
+
+    <xsd:element name="Response">
+      <xsd:complexType>
+        <xsd:sequence>
+          <xsd:element name="message" type="xsd:string"/>
+        </xsd:sequence>
+      </xsd:complexType>
+    </xsd:element>
+
+  </xsd:schema>
+ </types>
+
+ <message name="RequestMessage">
+   <part name="parameters" element="tns:Request"/>
+ </message>
+
+ <message name="ResponseMessage">
+   <part name="parameters" element="tns:Response"/>
+ </message>
+
+ <portType name="TestPortType">
+   <operation name="process">
+     <input message="tns:RequestMessage"/>
+     <output message="tns:ResponseMessage"/>
+   </operation>
+ </portType>
+
+ <binding name="TestBinding" type="tns:TestPortType">
+   <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+   <operation name="process">
+     <soap:operation soapAction="process"/>
+     <input>
+       <soap:body use="literal"/>
+     </input>
+     <output>
+       <soap:body use="literal"/>
+     </output>
+   </operation>
+ </binding>
+
+ <service name="TestService">
+   <port name="TestPort" binding="tns:TestBinding">
+     <soap:address location="http://10.177.56.229:780/hit/mainService"/>
+   </port>
+ </service>
+
+</definitions>
+
+
+
+
+
+
+
+
 import java.io.FileInputStream;
 import java.security.*;
 import java.security.cert.X509Certificate;
