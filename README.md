@@ -1,3 +1,144 @@
+import javax.xml.soap.*;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyStore;
+import java.security.PublicKey;
+import java.security.cert.X509Certificate;
+import javax.xml.crypto.dsig.*;
+import javax.xml.crypto.dsig.dom.DOMValidateContext;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.*;
+
+public class SoapSignatureVerifier {
+
+    public static boolean verifySignature(String soapXml,
+                                          String jksPath,
+                                          String jksPassword,
+                                          String alias) throws Exception {
+
+        // =========================
+        // 1. PARSE SOAP MESSAGE
+        // =========================
+        MessageFactory factory = MessageFactory.newInstance();
+        SOAPMessage message = factory.createMessage(
+                new MimeHeaders(),
+                new ByteArrayInputStream(soapXml.getBytes(StandardCharsets.UTF_8))
+        );
+
+        SOAPEnvelope envelope = message.getSOAPPart().getEnvelope();
+        SOAPHeader header = envelope.getHeader();
+
+        if (header == null) {
+            throw new Exception("No SOAP Header found");
+        }
+
+        // =========================
+        // 2. EXTRACT SIGNATURE NODE
+        // =========================
+        NodeList sigList = header.getElementsByTagNameNS(
+                XMLSignature.XMLNS, "Signature"
+        );
+
+        if (sigList.getLength() == 0) {
+            throw new Exception("Signature not found in SOAP Header");
+        }
+
+        Node signatureNode = sigList.item(0);
+
+        // =========================
+        // 3. LOAD CERTIFICATE FROM JKS
+        // =========================
+        KeyStore ks = KeyStore.getInstance("JKS");
+        FileInputStream fis = new FileInputStream(jksPath);
+        ks.load(fis, jksPassword.toCharArray());
+
+        X509Certificate cert = (X509Certificate) ks.getCertificate(alias);
+
+        if (cert == null) {
+            throw new Exception("Certificate not found for alias: " + alias);
+        }
+
+        PublicKey publicKey = cert.getPublicKey();
+
+        // =========================
+        // 4. PREPARE VALIDATION CONTEXT
+        // =========================
+        DOMValidateContext valContext = new DOMValidateContext(publicKey, signatureNode);
+
+        // 🔴 IMPORTANT FIX (ID ATTRIBUTE)
+        SOAPBody body = envelope.getBody();
+        Node bodyNode = body;
+
+        if (bodyNode instanceof Element) {
+            Element bodyElem = (Element) bodyNode;
+
+            // Support both Id and wsu:Id
+            if (bodyElem.hasAttribute("Id")) {
+                bodyElem.setIdAttribute("Id", true);
+            }
+            if (bodyElem.hasAttributeNS(
+                    "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd",
+                    "Id")) {
+                bodyElem.setIdAttributeNS(
+                        "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd",
+                        "Id", true);
+            }
+        }
+
+        // =========================
+        // 5. VERIFY SIGNATURE
+        // =========================
+        XMLSignatureFactory sigFactory = XMLSignatureFactory.getInstance("DOM");
+
+        XMLSignature signature = sigFactory.unmarshalXMLSignature(valContext);
+
+        boolean coreValidity = signature.validate(valContext);
+
+        // =========================
+        // 6. DEBUG DETAILS
+        // =========================
+        System.out.println("Signature validation status: " + coreValidity);
+
+        boolean sigValid = signature.getSignatureValue().validate(valContext);
+        System.out.println("SignatureValue valid: " + sigValid);
+
+        for (Object refObj : signature.getSignedInfo().getReferences()) {
+            Reference ref = (Reference) refObj;
+            boolean refValid = ref.validate(valContext);
+            System.out.println("Reference [" + ref.getURI() + "] valid: " + refValid);
+        }
+
+        return coreValidity;
+    }
+
+    // =========================
+    // MAIN FOR LOCAL TEST
+    // =========================
+    public static void main(String[] args) throws Exception {
+
+        String soapXml = new String(
+                java.nio.file.Files.readAllBytes(
+                        java.nio.file.Paths.get("signed-soap.xml")
+                ),
+                StandardCharsets.UTF_8
+        );
+
+        boolean result = verifySignature(
+                soapXml,
+                "/opt/IBM/keystore/N2ks.jks",
+                "password",
+                "client-public"
+        );
+
+        System.out.println("FINAL RESULT: " + result);
+    }
+}
+
+
+
+
+
+
 CREATE COMPUTE MODULE BuildResponse
 
 CREATE FUNCTION Main() RETURNS BOOLEAN
