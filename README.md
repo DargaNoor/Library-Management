@@ -1,3 +1,30 @@
+CREATE COMPUTE MODULE BuildResponse
+
+CREATE FUNCTION Main() RETURNS BOOLEAN
+BEGIN
+
+    DECLARE nsSoap NAMESPACE 'http://schemas.xmlsoap.org/soap/envelope/';
+    DECLARE nsTns NAMESPACE 'http://example.com/test';
+
+    DECLARE inputName CHARACTER;
+
+    SET inputName = InputRoot.XMLNSC.soapenv:Envelope.soapenv:Body.tns:Request.tns:name;
+
+    SET OutputRoot.XMLNSC.soapenv:Envelope.soapenv:Body.tns:Response.tns:message 
+        = 'Hello ' || inputName;
+
+    RETURN TRUE;
+
+END;
+
+END MODULE;
+
+
+
+
+
+
+
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.crypto.dsig.*;
 import javax.xml.crypto.dsig.dom.DOMValidateContext;
