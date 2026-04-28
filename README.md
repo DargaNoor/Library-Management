@@ -1,3 +1,87 @@
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.crypto.dsig.*;
+import javax.xml.crypto.dsig.dom.DOMValidateContext;
+import javax.xml.crypto.dsig.keyinfo.*;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+
+import java.io.FileInputStream;
+import java.security.KeyStore;
+import java.security.PublicKey;
+import java.security.cert.X509Certificate;
+
+public class XMLSignatureVerifier {
+
+    public static boolean verify(String xmlPath) {
+        try {
+
+            // Load XML
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+            dbf.setNamespaceAware(true);
+            Document doc = dbf.newDocumentBuilder().parse(xmlPath);
+
+            // Find Signature
+            NodeList nl = doc.getElementsByTagNameNS(XMLSignature.XMLNS, "Signature");
+            if (nl.getLength() == 0) {
+                throw new Exception("No Signature found");
+            }
+
+            // Load Keystore
+            KeyStore ks = KeyStore.getInstance("JKS");
+            ks.load(new FileInputStream("truststore.jks"), "changeit".toCharArray());
+
+            X509Certificate cert = (X509Certificate) ks.getCertificate("client-public");
+            PublicKey publicKey = cert.getPublicKey();
+
+            // Validate Signature
+            DOMValidateContext valContext = new DOMValidateContext(publicKey, nl.item(0));
+
+            XMLSignatureFactory factory = XMLSignatureFactory.getInstance("DOM");
+            XMLSignature signature = factory.unmarshalXMLSignature(valContext);
+
+            boolean coreValidity = signature.validate(valContext);
+
+            if (!coreValidity) {
+                System.out.println("❌ Signature validation failed");
+
+                boolean sv = signature.getSignatureValue().validate(valContext);
+                System.out.println("Signature Value valid: " + sv);
+
+                for (Object refObj : signature.getSignedInfo().getReferences()) {
+                    Reference ref = (Reference) refObj;
+                    System.out.println("Reference valid: " + ref.validate(valContext));
+                }
+            }
+
+            return coreValidity;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static void main(String[] args) {
+        boolean result = verify("signed.xml");
+        System.out.println("Final Verification Result: " + result);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import javax.xml.crypto.dsig.spec.ExcC14NParameterSpec;
 
 // prefixes that appear on/under Body and must be preserved
