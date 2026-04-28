@@ -1,6 +1,148 @@
 import org.w3c.dom.*;
 import javax.xml.parsers.*;
 import javax.xml.crypto.dsig.*;
+import javax.xml.crypto.dsig.dom.DOMSignContext;
+import javax.xml.crypto.dsig.keyinfo.*;
+import javax.xml.crypto.*;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.security.*;
+import java.security.cert.X509Certificate;
+import java.util.*;
+
+public class SignSOAP {
+
+    public static void main(String[] args) throws Exception {
+
+        // ===== READ INPUT AS UTF-8 (IMPORTANT) =====
+        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+        dbf.setNamespaceAware(true);
+
+        DocumentBuilder db = dbf.newDocumentBuilder();
+
+        // Force UTF-8 reading
+        InputStream is = new FileInputStream("input.xml");
+        Reader reader = new InputStreamReader(is, StandardCharsets.UTF_8);
+        InputSource source = new InputSource(reader);
+        source.setEncoding("UTF-8");
+
+        Document doc = db.parse(source);
+
+        // ===== BODY =====
+        Element body = (Element) doc.getElementsByTagNameNS(
+                "http://schemas.xmlsoap.org/soap/envelope/", "Body").item(0);
+
+        // Ensure wsu:Id
+        body.setAttributeNS(
+                "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd",
+                "wsu:Id",
+                "body"
+        );
+
+        body.setIdAttributeNS(
+                "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd",
+                "Id",
+                true
+        );
+
+        // ===== KEYSTORE =====
+        KeyStore ks = KeyStore.getInstance("PKCS12");
+        ks.load(new FileInputStream("client.p12"), "password".toCharArray());
+
+        String alias = ks.aliases().nextElement();
+        PrivateKey privateKey = (PrivateKey) ks.getKey(alias, "password".toCharArray());
+        X509Certificate cert = (X509Certificate) ks.getCertificate(alias);
+
+        XMLSignatureFactory fac = XMLSignatureFactory.getInstance("DOM");
+
+        // ===== REFERENCE =====
+        Reference ref = fac.newReference(
+                "#body",
+                fac.newDigestMethod(DigestMethod.SHA1, null),
+                Collections.singletonList(
+                        fac.newTransform(
+                                "http://www.w3.org/2001/10/xml-exc-c14n#",
+                                (TransformParameterSpec) null)
+                ),
+                null,
+                null
+        );
+
+        // ===== SIGNED INFO =====
+        SignedInfo si = fac.newSignedInfo(
+                fac.newCanonicalizationMethod(
+                        "http://www.w3.org/2001/10/xml-exc-c14n#",
+                        (C14NMethodParameterSpec) null),
+                fac.newSignatureMethod(SignatureMethod.RSA_SHA1, null),
+                Collections.singletonList(ref)
+        );
+
+        // ===== KEY INFO =====
+        KeyInfoFactory kif = fac.getKeyInfoFactory();
+        X509Data x509Data = kif.newX509Data(Collections.singletonList(cert));
+        KeyInfo ki = kif.newKeyInfo(Collections.singletonList(x509Data));
+
+        XMLSignature signature = fac.newXMLSignature(si, ki);
+
+        // ===== INSERT INTO WSSE HEADER =====
+        Node secNode = doc.getElementsByTagNameNS(
+                "http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd",
+                "Security").item(0);
+
+        DOMSignContext dsc = new DOMSignContext(privateKey, secNode);
+
+        // FORCE ds prefix
+        dsc.setDefaultNamespacePrefix("ds");
+
+        signature.sign(dsc);
+
+        // ===== WRITE OUTPUT (UTF-8 + NO EXTRA WHITESPACE) =====
+        TransformerFactory tf = TransformerFactory.newInstance();
+        Transformer trans = tf.newTransformer();
+
+        trans.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+
+        // ⚠️ DO NOT pretty print (can break digest)
+        trans.setOutputProperty(OutputKeys.INDENT, "no");
+
+        // Normalize line endings
+        StringWriter writer = new StringWriter();
+        trans.transform(new DOMSource(doc), new StreamResult(writer));
+
+        String xml = writer.toString().replace("\r\n", "\n");
+
+        // Write UTF-8 safely
+        try (OutputStream os = new FileOutputStream("signed.xml")) {
+            os.write(xml.getBytes(StandardCharsets.UTF_8));
+        }
+
+        System.out.println("✅ Signed XML generated (UTF-8 safe)");
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import org.w3c.dom.*;
+import javax.xml.parsers.*;
+import javax.xml.crypto.dsig.*;
 import javax.xml.crypto.dsig.dom.*;
 import javax.xml.crypto.dsig.keyinfo.*;
 import javax.xml.crypto.*;
