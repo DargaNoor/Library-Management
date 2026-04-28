@@ -1,3 +1,34 @@
+import javax.xml.crypto.dsig.spec.ExcC14NParameterSpec;
+
+// prefixes that appear on/under Body and must be preserved
+List<String> prefixes = Arrays.asList("soapenv", "tns");
+
+Transform c14nTransform = fac.newTransform(
+ "http://www.w3.org/2001/10/xml-exc-c14n#",
+ new ExcC14NParameterSpec(prefixes)
+);
+
+Reference ref = fac.newReference(
+ "#body",
+ fac.newDigestMethod(DigestMethod.SHA1, null),
+ Collections.singletonList(c14nTransform),
+ null, null
+);
+
+SignedInfo si = fac.newSignedInfo(
+ fac.newCanonicalizationMethod(
+  "http://www.w3.org/2001/10/xml-exc-c14n#",
+  new ExcC14NParameterSpec(prefixes)
+ ),
+ fac.newSignatureMethod(SignatureMethod.RSA_SHA1, null),
+ Collections.singletonList(ref)
+);
+
+
+
+
+
+
 import org.w3c.dom.*;
 import javax.xml.parsers.*;
 import javax.xml.crypto.dsig.*;
