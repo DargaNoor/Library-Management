@@ -1,3 +1,38 @@
+#!/bin/bash
+
+SERVER=$1
+PORT=$2
+API=$3
+
+# Validation
+if [ $# -ne 3 ]; then
+  echo "Usage: $0 <server> <port> <api_path>"
+  exit 1
+fi
+
+echo "Checking server: $SERVER"
+
+mqsilist | grep -w $SERVER | grep running > /dev/null
+
+if [ $? -ne 0 ]; then
+    echo "❌ Server is NOT running. Starting..."
+    mqsistart $SERVER
+    sleep 5
+else
+    echo "✅ Server is running"
+fi
+
+echo "Checking API: http://localhost:$PORT$API"
+
+curl -s http://localhost:$PORT$API > /dev/null
+
+if [ $? -ne 0 ]; then
+    echo "❌ API is DOWN"
+else
+    echo "✅ API is UP"
+fi
+
+
 import javax.xml.soap.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
