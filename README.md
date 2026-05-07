@@ -1,5 +1,122 @@
 #!/bin/bash
 
+QMGR=$1
+SERVER=$2
+PORT=$3
+API=$4
+QUEUE=$5
+
+# -------------------------------
+# VALIDATION
+# -------------------------------
+if [ $# -ne 5 ]; then
+  echo "Usage: $0 <QMGR> <SERVER> <HTTP_PORT> <API_PATH> <QUEUE_NAME>"
+  exit 1
+fi
+
+echo "======================================"
+echo "   ACE + MQ MASTER HEALTH CHECK"
+echo "======================================"
+
+# -------------------------------
+# 1. CHECK QUEUE MANAGER
+# -------------------------------
+echo "Checking Queue Manager: $QMGR"
+
+dspmq | grep -w $QMGR | grep Running > /dev/null
+
+if [ $? -eq 0 ]; then
+  echo "✅ Queue Manager is RUNNING"
+else
+  echo "❌ Queue Manager is DOWN"
+fi
+
+# -------------------------------
+# 2. CHECK QUEUE DEPTH
+# -------------------------------
+echo "Checking Queue: $QUEUE"
+
+echo "DISPLAY QLOCAL($QUEUE) CURDEPTH" | runmqsc $QMGR > /tmp/q.out 2>/dev/null
+
+DEPTH=$(grep CURDEPTH /tmp/q.out | awk -F'[()]' '{print $2}')
+
+if [ -z "$DEPTH" ]; then
+  echo "❌ Unable to fetch queue depth"
+else
+  echo "✅ Queue Depth: $DEPTH"
+fi
+
+# -------------------------------
+# 3. CHECK INTEGRATION SERVER
+# -------------------------------
+echo "Checking Integration Server: $SERVER"
+
+mqsilist | grep -w $SERVER | grep running > /dev/null
+
+if [ $? -eq 0 ]; then
+  echo "✅ Integration Server is RUNNING"
+else
+  echo "❌ Integration Server is DOWN"
+fi
+
+# -------------------------------
+# 4. CHECK HTTP PORT
+# -------------------------------
+echo "Checking HTTP Port: $PORT"
+
+netstat -tulnp 2>/dev/null | grep ":$PORT " > /dev/null
+
+if [ $? -eq 0 ]; then
+  echo "✅ Port $PORT is LISTENING"
+else
+  echo "❌ Port $PORT is NOT LISTENING"
+fi
+
+# -------------------------------
+# 5. CHECK API STATUS
+# -------------------------------
+URL="http://localhost:$PORT$API"
+
+echo "Checking API: $URL"
+
+curl -s --head $URL | head -n 1 | grep "200" > /dev/null
+
+if [ $? -eq 0 ]; then
+  echo "✅ API is UP"
+else
+  echo "❌ API is DOWN"
+fi
+
+# -------------------------------
+# 6. CHECK MESSAGE FLOWS
+# -------------------------------
+echo "Checking Message Flows..."
+
+mqsilist $SERVER -r > /tmp/flows.out
+
+if [ $? -ne 0 ]; then
+  echo "❌ Unable to fetch flows"
+else
+  grep "Message Flow" /tmp/flows.out | while read line
+  do
+    FLOW_NAME=$(echo $line | awk '{print $3}')
+    STATUS=$(echo $line | grep -oE 'running|stopped')
+
+    if [[ "$STATUS" == "running" ]]; then
+        echo "✅ $FLOW_NAME is RUNNING"
+    else
+        echo "❌ $FLOW_NAME is STOPPED"
+    fi
+  done
+fi
+
+# -------------------------------
+# 7. SUMMARY
+# -------------------------------
+echo "======================================"
+echo " Health Check Completed"
+echo "======================================"#!/bin/bash
+
 SERVER=$1
 PORT=$2
 API=$3
