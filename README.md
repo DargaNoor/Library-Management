@@ -1,5 +1,134 @@
 #!/bin/bash
 
+SERVER=$1
+SEARCH=$2
+
+# -----------------------------
+# VALIDATION
+# -----------------------------
+if [ $# -ne 2 ]; then
+  echo "Usage: $0 <IntegrationServer> <Flow/API/Application>"
+  exit 1
+fi
+
+echo "========================================="
+echo "      IBM ACE FLOW/API CHECK"
+echo "========================================="
+
+echo "Integration Server : $SERVER"
+echo "Search Value       : $SEARCH"
+
+echo ""
+
+# -----------------------------
+# CHECK SERVER STATUS
+# -----------------------------
+mqsilist | grep -w "$SERVER" | grep running > /dev/null
+
+if [ $? -ne 0 ]; then
+   echo "❌ Integration Server is DOWN"
+   exit 1
+else
+   echo "✅ Integration Server is RUNNING"
+fi
+
+echo ""
+
+# -----------------------------
+# FETCH DEPLOYED RESOURCES
+# -----------------------------
+mqsilist "$SERVER" -r > /tmp/ace_resources.txt 2>/dev/null
+
+if [ $? -ne 0 ]; then
+   echo "❌ Unable to fetch deployed resources"
+   exit 1
+fi
+
+# -----------------------------
+# SEARCH RESOURCE
+# -----------------------------
+grep -i "$SEARCH" /tmp/ace_resources.txt > /tmp/search_result.txt
+
+if [ $? -ne 0 ]; then
+   echo "❌ No matching Flow/API/Application found"
+   exit 1
+fi
+
+echo "✅ Matching deployment found"
+echo ""
+
+# -----------------------------
+# DISPLAY MATCHING RESULTS
+# -----------------------------
+cat /tmp/search_result.txt
+
+echo ""
+
+# -----------------------------
+# CHECK MESSAGE FLOW STATUS
+# -----------------------------
+echo "Checking flow status..."
+
+grep -i "Message Flow" /tmp/search_result.txt | while read line
+do
+
+   FLOW=$(echo "$line" | awk '{print $3}')
+
+   echo "$line" | grep running > /dev/null
+
+   if [ $? -eq 0 ]; then
+      echo "✅ Flow $FLOW is RUNNING"
+   else
+      echo "❌ Flow $FLOW is STOPPED"
+   fi
+
+done
+
+echo ""
+
+# -----------------------------
+# CHECK URL / API
+# -----------------------------
+grep -Ei "HTTP Input|REST API|URL" /tmp/search_result.txt > /dev/null
+
+if [ $? -eq 0 ]; then
+   echo "✅ REST/API related deployment detected"
+else
+   echo "ℹ️ No REST/API details found"
+fi
+
+echo ""
+
+echo "========================================="
+echo " CHECK COMPLETED"
+echo "========================================="
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#!/bin/bash
+
 QMGR=$1
 SERVER=$2
 PORT=$3
