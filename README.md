@@ -3,6 +3,133 @@
 SERVER=$1
 SEARCH=$2
 
+# ------------------------------------
+# VALIDATION
+# ------------------------------------
+if [ $# -ne 2 ]; then
+   echo "Usage: $0 <IntegrationServer> <SearchValue>"
+   exit 1
+fi
+
+echo "======================================"
+echo " IBM ACE LIVE STATUS CHECK"
+echo "======================================"
+
+echo "Server       : $SERVER"
+echo "Search Value : $SEARCH"
+
+echo ""
+
+# ------------------------------------
+# CHECK SERVER STATUS
+# ------------------------------------
+mqsilist | grep -w "$SERVER" | grep running > /dev/null
+
+if [ $? -ne 0 ]; then
+   echo "❌ Integration Server DOWN"
+   exit 1
+fi
+
+echo "✅ Integration Server RUNNING"
+
+echo ""
+
+# ------------------------------------
+# LIVE DEPLOYMENT CHECK
+# ------------------------------------
+RESULT=$(mqsilist "$SERVER" -r 2>/dev/null | grep -i "$SEARCH")
+
+# ------------------------------------
+# MATCH CHECK
+# ------------------------------------
+if [ -z "$RESULT" ]; then
+   echo "❌ No matching deployment found"
+   exit 1
+fi
+
+echo "✅ Matching deployment found"
+
+echo ""
+echo "------------- MATCHED OBJECTS -------------"
+echo "$RESULT"
+echo "-------------------------------------------"
+
+echo ""
+
+# ------------------------------------
+# FLOW STATUS CHECK
+# ------------------------------------
+echo "$RESULT" | grep -i "stopped" > /dev/null
+
+if [ $? -eq 0 ]; then
+    echo "❌ OBJECT STATUS : STOPPED"
+else
+    echo "✅ OBJECT STATUS : RUNNING"
+fi
+
+echo ""
+
+# ------------------------------------
+# API URL CHECK
+# ------------------------------------
+echo "$SEARCH" | grep "/" > /dev/null
+
+if [ $? -eq 0 ]; then
+
+   echo "Detected URL/API Path input"
+
+   PORT=$(mqsireportproperties "$SERVER" \
+          -o HTTPConnector \
+          -n port \
+          -r 2>/dev/null | grep port | awk -F"'" '{print $2}')
+
+   if [ -z "$PORT" ]; then
+      PORT=7800
+   fi
+
+   URL="http://localhost:$PORT$SEARCH"
+
+   echo "Testing URL : $URL"
+
+   HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$URL")
+
+   if [ "$HTTP_CODE" == "200" ]; then
+       echo "✅ API URL ACTIVE"
+   else
+       echo "❌ API URL NOT RESPONDING"
+       echo "HTTP STATUS : $HTTP_CODE"
+   fi
+
+fi
+
+echo ""
+
+echo "======================================"
+echo " CHECK COMPLETED"
+echo "======================================"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#!/bin/bash
+
+SERVER=$1
+SEARCH=$2
+
 # -----------------------------
 # VALIDATION
 # -----------------------------
