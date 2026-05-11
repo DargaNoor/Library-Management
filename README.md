@@ -1,3 +1,32 @@
+
+# ---------------------------------
+# CHECK APPLICATION STATE
+# ---------------------------------
+echo "$RESULT" | grep -i "application" > /dev/null
+
+if [ $? -eq 0 ]
+then
+   echo "✅ APPLICATION DEPLOYED"
+fi
+
+# ---------------------------------
+# CHECK FLOW STATE
+# ---------------------------------
+echo "$RESULT" | grep -i "message flow" > /dev/null
+
+if [ $? -eq 0 ]
+then
+   echo "✅ MESSAGE FLOW DEPLOYED"
+fi
+
+
+
+
+
+
+
+
+
 #!/bin/bash
 
 SERVER=$1
