@@ -1,3 +1,136 @@
+// IBM DataPower GatewayScript
+// Version Compatible: IBM DataPower 10.6.0
+// AES/GCM/NoPadding Decryption
+// IV comes from Header (Base64 Encoded)
+// Secret Key is hardcoded (same as Java code)
+
+// IMPORTS
+var crypto = require('crypto');
+var hm = require('header-metadata');
+
+// ==============================
+// CONFIG
+// ==============================
+
+// Same Base64 key from Java
+var base64Key = "SfiwCdAbQLJGFai1tXj4lIqcTXQsaP8hA6294A1aXoQ=";
+
+// Header names
+var encryptedHeaderName = "encryptedData";
+var ivHeaderName = "iv";
+
+// ==============================
+// READ HEADERS
+// ==============================
+
+var encryptedDataB64 = hm.current.get(encryptedHeaderName);
+var ivB64 = hm.current.get(ivHeaderName);
+
+// ==============================
+// VALIDATION
+// ==============================
+
+if (!encryptedDataB64) {
+    session.output.write(
+        JSON.stringify({
+            error: "Missing encryptedData header"
+        })
+    );
+    session.reject("Missing encryptedData header");
+    return;
+}
+
+if (!ivB64) {
+    session.output.write(
+        JSON.stringify({
+            error: "Missing iv header"
+        })
+    );
+    session.reject("Missing iv header");
+    return;
+}
+
+try {
+
+    // ==============================
+    // CONVERT BASE64 TO BUFFER
+    // ==============================
+
+    var keyBuffer = Buffer.from(base64Key, 'base64');
+
+    var ivBuffer = Buffer.from(ivB64, 'base64');
+
+    var encryptedBuffer = Buffer.from(encryptedDataB64, 'base64');
+
+    // ==============================
+    // AES-256-GCM DECRYPT
+    // ==============================
+
+    // GCM TAG = LAST 16 BYTES
+    var tagLength = 16;
+
+    var cipherText = encryptedBuffer.slice(
+        0,
+        encryptedBuffer.length - tagLength
+    );
+
+    var authTag = encryptedBuffer.slice(
+        encryptedBuffer.length - tagLength
+    );
+
+    // CREATE DECIPHER
+    var decipher = crypto.createDecipheriv(
+        'aes-256-gcm',
+        keyBuffer,
+        ivBuffer
+    );
+
+    // SET AUTH TAG
+    decipher.setAuthTag(authTag);
+
+    // DECRYPT
+    var decrypted =
+        decipher.update(cipherText, null, 'utf8');
+
+    decrypted += decipher.final('utf8');
+
+    // ==============================
+    // OUTPUT
+    // ==============================
+
+    session.output.write(
+        JSON.stringify({
+            decryptedData: decrypted
+        })
+    );
+
+}
+catch (e) {
+
+    session.output.write(
+        JSON.stringify({
+            error: e.toString()
+        })
+    );
+
+    session.reject(e.toString());
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # ---------------------------------
 # CHECK APPLICATION STATE
