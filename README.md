@@ -1,3 +1,149 @@
+var crypto = require('crypto');
+
+// =====================================
+// HARD CODED SECRET KEY
+// =====================================
+
+var base64Key =
+'SfiwCdAbQLJGFai1tXj4lIqcTXQsaP8hA6294A1aXoQ=';
+
+// =====================================
+// PAYLOAD TO ENCRYPT
+// =====================================
+
+var plainText =
+JSON.stringify({
+    name: "Noor",
+    channel: "DP"
+});
+
+try {
+
+    // =====================================
+    // KEY BUFFER
+    // =====================================
+
+    var keyBuffer =
+        Buffer.from(base64Key, 'base64');
+
+    // =====================================
+    // GENERATE 12 BYTE IV
+    // =====================================
+
+    var ivBuffer =
+        crypto.randomBytes(12);
+
+    // =====================================
+    // CREATE CIPHER
+    // =====================================
+
+    var cipher =
+        crypto.createCipheriv(
+            'aes-256-gcm',
+            keyBuffer,
+            ivBuffer
+        );
+
+    // =====================================
+    // ENCRYPT
+    // =====================================
+
+    var encrypted =
+        cipher.update(
+            plainText,
+            'utf8'
+        );
+
+    encrypted = Buffer.concat([
+        encrypted,
+        cipher.final()
+    ]);
+
+    // =====================================
+    // GET AUTH TAG
+    // =====================================
+
+    var authTag =
+        cipher.getAuthTag();
+
+    // =====================================
+    // APPEND AUTH TAG
+    // JAVA COMPATIBLE FORMAT
+    // =====================================
+
+    var finalBuffer =
+        Buffer.concat([
+            encrypted,
+            authTag
+        ]);
+
+    // =====================================
+    // BASE64 ENCODE
+    // =====================================
+
+    var encryptedBase64 =
+        finalBuffer.toString('base64');
+
+    var ivBase64 =
+        ivBuffer.toString('base64');
+
+    // =====================================
+    // PRINT VALUES
+    // =====================================
+
+    console.error(
+        "IV HEADER: " + ivBase64
+    );
+
+    console.error(
+        "ENCRYPTED HEADER: " +
+        encryptedBase64
+    );
+
+    // =====================================
+    // STORE VARIABLES
+    // =====================================
+
+    session.variables.set(
+        'var://context/iv',
+        ivBase64
+    );
+
+    session.variables.set(
+        'var://context/encryptedData',
+        encryptedBase64
+    );
+
+    // =====================================
+    // OUTPUT
+    // =====================================
+
+    session.output.write(
+        JSON.stringify({
+            iv: ivBase64,
+            encryptedData: encryptedBase64
+        })
+    );
+
+}
+catch (e) {
+
+    console.error(
+        "ENCRYPT ERROR: " + e
+    );
+
+    session.reject(e.toString());
+}
+
+
+
+
+
+
+
+
+
+
 // IBM DataPower GatewayScript
 // Version Compatible: IBM DataPower 10.6.0
 // AES/GCM/NoPadding Decryption
