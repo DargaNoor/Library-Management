@@ -1,3 +1,184 @@
+#!/bin/bash
+
+SEARCH=$1
+
+# ------------------------------------------------
+# VALIDATION
+# ------------------------------------------------
+if [ $# -ne 1 ]
+then
+   echo "Usage: $0 <API/Flow/Application/URL>"
+   exit 1
+fi
+
+echo "======================================================"
+echo " IBM ACE GLOBAL DEPLOYMENT DISCOVERY"
+echo "======================================================"
+
+echo "Search Value : $SEARCH"
+
+echo ""
+
+TOTAL_MATCHES=0
+
+# ------------------------------------------------
+# GET ALL NODES
+# ------------------------------------------------
+NODES=$(mqsilist | grep "integration node" | awk -F"'" '{print $2}')
+
+# ------------------------------------------------
+# LOOP THROUGH NODES
+# ------------------------------------------------
+for NODE in $NODES
+do
+
+   echo "######################################################"
+   echo "NODE : $NODE"
+   echo "######################################################"
+
+   echo ""
+
+   # ------------------------------------------------
+   # GET ALL SERVERS / EGs
+   # ------------------------------------------------
+   SERVERS=$(mqsilist $NODE | grep "integration server" | awk -F"'" '{print $2}')
+
+   # ------------------------------------------------
+   # LOOP SERVERS
+   # ------------------------------------------------
+   for SERVER in $SERVERS
+   do
+
+      echo "------------------------------------------------------"
+      echo "Integration Server / EG : $SERVER"
+      echo "------------------------------------------------------"
+
+      SERVER_INFO=$(mqsilist $NODE | grep -w "$SERVER")
+
+      echo "$SERVER_INFO"
+
+      echo ""
+
+      echo "$SERVER_INFO" | grep -i running
+
+      if [ $? -ne 0 ]
+      then
+         echo "❌ SERVER STATUS : STOPPED"
+         echo ""
+         continue
+      fi
+
+      echo "✅ SERVER STATUS : RUNNING"
+
+      echo ""
+
+      # ------------------------------------------------
+      # SEARCH LIVE DEPLOYMENTS
+      # ------------------------------------------------
+      RESULT=$(mqsilist $NODE -e $SERVER -r | grep -Ei "$SEARCH")
+
+      # ------------------------------------------------
+      # CHECK MATCH
+      # ------------------------------------------------
+      if [ -z "$RESULT" ]
+      then
+         echo "No matching deployment"
+         echo ""
+         continue
+      fi
+
+      MATCH_COUNT=$(echo "$RESULT" | wc -l)
+
+      TOTAL_MATCHES=$((TOTAL_MATCHES + MATCH_COUNT))
+
+      echo "✅ MATCH FOUND"
+
+      echo ""
+
+      echo "---------------- MATCH DETAILS ----------------"
+
+      echo "$RESULT"
+
+      echo "------------------------------------------------"
+
+      echo ""
+
+      # ------------------------------------------------
+      # APPLICATION CHECK
+      # ------------------------------------------------
+      echo "$RESULT" | grep -i "application"
+
+      if [ $? -eq 0 ]
+      then
+         echo "✅ APPLICATION FOUND"
+      fi
+
+      # ------------------------------------------------
+      # FLOW CHECK
+      # ------------------------------------------------
+      echo "$RESULT" | grep -i "message flow"
+
+      if [ $? -eq 0 ]
+      then
+         echo "✅ MESSAGE FLOW FOUND"
+      fi
+
+      # ------------------------------------------------
+      # API CHECK
+      # ------------------------------------------------
+      echo "$RESULT" | grep -Ei "rest api|http input|urlsuffix"
+
+      if [ $? -eq 0 ]
+      then
+         echo "✅ API DEPLOYMENT FOUND"
+      fi
+
+      # ------------------------------------------------
+      # STATUS CHECK
+      # ------------------------------------------------
+      echo "$RESULT" | grep -Ei "stopped|inactive"
+
+      if [ $? -eq 0 ]
+      then
+         echo "❌ OBJECT STATUS : STOPPED"
+      else
+         echo "✅ OBJECT STATUS : RUNNING"
+      fi
+
+      echo ""
+
+   done
+
+done
+
+echo "======================================================"
+echo " TOTAL MATCH COUNT : $TOTAL_MATCHES"
+echo "======================================================"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 var crypto = require('crypto');
 
 // =====================================
