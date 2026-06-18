@@ -1,4 +1,72 @@
-# Library-Management
+                    TLS 1.2
+
+ Client
+    |
+    | HTTPS
+    |
++-----------+
+| Load      |
+| Balancer  |
++-----------+
+    |
+    | HTTPS
+    |
++-----------+
+| DataPower |
+| SSL Server|
+| Profile   |
++-----------+
+    |
+    | HTTPS
+    |
++-----------+
+| IBM ACE   |
+| HTTPInput |
+| HTTPReq   |
++-----------+
+    |
+    | HTTPS
+    |
+ Backend APIs
+ 
+ 
+ 
+ 
+                  Need Validation
+
+ Client
+    |
+    V
++--------------+
+| LoadBalancer |
+| TLS 1.3      |
++--------------+
+      |
+      V
++--------------+
+| DataPower    |
+| SSL Server   |
+| SSL Client   |
+| Crypto Prof. |
++--------------+
+      |
+      V
++--------------+
+| IBM ACE      |
+| HTTPInput    |
+| HTTPRequest  |
+| Java 17      |
++--------------+
+      |
+      V
++--------------+
+| Backend APIs |
+| TLS 1.3      |
++--------------+
+ 
+ 
+ 
+ # Library-Management
 Library Management System is a system which maintains the information about the books present in the library, their authors, the members of library to whom books are 
 issued and all. This is very difficult to organize manually. Maintenance of all this information manually is a very complex task. Owing to the advancement of technology, 
 organization of an Online Library becomes much simple.The maintenance of the records is made efficient, as all the records are stored in the ACCESS database, through 
